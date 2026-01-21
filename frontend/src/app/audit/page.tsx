@@ -7,7 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { motion } from "framer-motion";
 import { FileClock, User, Hash, Activity } from "lucide-react";
 
+import { useRouter } from 'next/navigation';
+
 export default function AuditPage() {
+    const router = useRouter();
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
 

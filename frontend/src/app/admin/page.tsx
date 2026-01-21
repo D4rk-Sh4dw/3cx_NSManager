@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Plus, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useRouter } from 'next/navigation';
+
 export default function AdminPage() {
+    const router = useRouter();
     const [persons, setPersons] = useState<Person[]>([]);
     const [formData, setFormData] = useState({ first_name: '', last_name: '', external_number: '' });
     const [loading, setLoading] = useState(false);
