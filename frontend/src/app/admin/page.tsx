@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2, Plus, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
 import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
@@ -23,7 +22,7 @@ export default function AdminPage() {
             return;
         }
         loadPersons();
-    }, []);
+    }, [router]);
 
     const loadPersons = async () => {
         const data = await getPersons();
@@ -51,7 +50,6 @@ export default function AdminPage() {
             <Navbar />
             <div className="container mx-auto mt-8 p-4">
                 <div className="grid gap-6 md:grid-cols-3">
-                    {/* Add Person Form */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -90,7 +88,6 @@ export default function AdminPage() {
                         </Card>
                     </motion.div>
 
-                    {/* Person List */}
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}

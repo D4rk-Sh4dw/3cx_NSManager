@@ -1,12 +1,10 @@
 "use client";
-
 import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { getAuditLogs, AuditLog } from '@/services/auditService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { FileClock, User, Hash, Activity } from "lucide-react";
-
 import { useRouter } from 'next/navigation';
 
 export default function AuditPage() {
@@ -21,7 +19,7 @@ export default function AuditPage() {
             return;
         }
         loadLogs();
-    }, []);
+    }, [router]);
 
     const loadLogs = async () => {
         try {
