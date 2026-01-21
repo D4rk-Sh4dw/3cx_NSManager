@@ -37,6 +37,7 @@ class User(UserBase):
 class UserSimple(BaseModel):
     """Simplified user for display in plans"""
     id: int
+    username: str
     first_name: str
     last_name: str
     phone_number: Optional[str] = None
