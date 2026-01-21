@@ -1,13 +1,21 @@
-import Navbar from '@/components/Navbar';
+"use client";
+
 import CalendarComponent from '@/components/CalendarComponent';
+import Navbar from '@/components/Navbar';
+import { motion } from "framer-motion";
 
 export default function CalendarPage() {
     return (
-        <main>
+        <main className="min-h-screen bg-background">
             <Navbar />
-            <div className="container mx-auto mt-5">
-                <h1 className="text-2xl font-bold mb-4">On-Call Duty Planner</h1>
-                <CalendarComponent />
+            <div className="container mx-auto mt-8 p-4">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                >
+                    <CalendarComponent />
+                </motion.div>
             </div>
         </main>
     );

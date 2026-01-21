@@ -3,58 +3,92 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login } from '@/services/authService';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { KeyRound, User } from 'lucide-react';
 
 export default function LoginPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const data = await login(username, password);
             localStorage.setItem('token', data.access_token);
             router.push('/calendar');
         } catch (err) {
             setError('Invalid credentials');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-                <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-                {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-                <form onSubmit={handleLogin}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Username</label>
-                        <input
-                            type="text"
-                            className="w-full p-2 border rounded"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="mb-6">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                        <input
-                            type="password"
-                            className="w-full p-2 border rounded"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-                    >
-                        Sign In
-                    </button>
-                </form>
-            </div>
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary">
+                    <CardHeader className="text-center">
+                        <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+                        <p className="text-muted-foreground text-sm">Please sign in to continue</p>
+                    </CardHeader>
+                    <CardContent>
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                className="bg-destructive/15 text-destructive text-sm p-3 rounded-md mb-4"
+                            >
+                                {error}
+                            </motion.div>
+                        )}
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <div className="space-y-2">
+                                <div className="relative">
+                                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Username"
+                                        className="pl-9"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="relative">
+                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="password"
+                                        placeholder="Password"
+                                        className="pl-9"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <Button type="submit" className="w-full" disabled={loading}>
+                                {loading ? "Signing In..." : "Sign In"}
+                            </Button>
+                        </form>
+                    </CardContent>
+                    <CardFooter className="justify-center text-xs text-muted-foreground">
+                        Emergency Service Management System
+                    </CardFooter>
+                </Card>
+            </motion.div>
         </div>
     );
 }
