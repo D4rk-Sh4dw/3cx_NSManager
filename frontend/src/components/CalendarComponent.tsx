@@ -93,13 +93,19 @@ export default function CalendarComponent() {
     const handleSave = async () => {
         if (selectedRange && selectedUserId) {
             try {
-                // Adjust end date to 23:59:59 (FullCalendar returns exclusive end date 00:00:00 of next day)
+                // Helper to preserve local time value when converting to ISO (basically converting 00:00 Local -> 00:00 UTC)
+                const toLocalISOString = (date: Date) => {
+                    const tzOffset = date.getTimezoneOffset() * 60000;
+                    return new Date(date.getTime() - tzOffset).toISOString();
+                };
+
+                // Adjust end date to 23:59:59
                 const endDate = new Date(selectedRange.end);
                 endDate.setSeconds(endDate.getSeconds() - 1);
 
                 await createPlan({
-                    start_date: selectedRange.start.toISOString(),
-                    end_date: endDate.toISOString(),
+                    start_date: toLocalISOString(selectedRange.start),
+                    end_date: toLocalISOString(endDate),
                     user_id: parseInt(selectedUserId)
                 });
                 setModalOpen(false);
