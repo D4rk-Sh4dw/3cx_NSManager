@@ -12,6 +12,22 @@ export const exportPlans = async (): Promise<void> => {
     document.body.appendChild(link);
     link.click();
     link.remove();
+    link.click();
+    link.remove();
+};
+
+export const exportPlansPdf = async (): Promise<void> => {
+    const response = await api.get('/export/plans/pdf', {
+        responseType: 'blob'
+    });
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `notfallplan_export_${new Date().toISOString().slice(0, 10)}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 };
 
 export const exportAudit = async (): Promise<void> => {

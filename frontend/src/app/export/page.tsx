@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { exportPlans, exportAudit } from '@/services/exportService';
+import { exportPlans, exportAudit, exportPlansPdf } from '@/services/exportService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, FileSpreadsheet, FileClock } from 'lucide-react';
@@ -30,6 +30,19 @@ export default function ExportPage() {
         setLoadingPlans(true);
         try {
             await exportPlans();
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert('Export fehlgeschlagen');
+        } finally {
+            setLoadingPlans(false);
+            setLoadingPlans(false);
+        }
+    };
+
+    const handleExportPlansPdf = async () => {
+        setLoadingPlans(true);
+        try {
+            await exportPlansPdf();
         } catch (error) {
             console.error('Export failed:', error);
             alert('Export fehlgeschlagen');
@@ -76,8 +89,11 @@ export default function ExportPage() {
                                         <p className="text-sm text-muted-foreground mb-4">
                                             Alle Dienstpläne mit Benutzerinformationen, Zeiten und Status.
                                         </p>
-                                        <Button onClick={handleExportPlans} disabled={loadingPlans} className="w-full">
-                                            {loadingPlans ? 'Exportiere...' : 'Als CSV herunterladen'}
+                                        <Button onClick={handleExportPlans} disabled={loadingPlans} className="w-full mb-2">
+                                            {loadingPlans ? 'Exportiere CSV...' : 'Als CSV herunterladen'}
+                                        </Button>
+                                        <Button onClick={handleExportPlansPdf} disabled={loadingPlans} variant="outline" className="w-full">
+                                            {loadingPlans ? 'Exportiere PDF...' : 'Als PDF herunterladen'}
                                         </Button>
                                     </CardContent>
                                 </Card>
