@@ -93,9 +93,13 @@ export default function CalendarComponent() {
     const handleSave = async () => {
         if (selectedRange && selectedUserId) {
             try {
+                // Adjust end date to 23:59:59 (FullCalendar returns exclusive end date 00:00:00 of next day)
+                const endDate = new Date(selectedRange.end);
+                endDate.setSeconds(endDate.getSeconds() - 1);
+
                 await createPlan({
                     start_date: selectedRange.start.toISOString(),
-                    end_date: selectedRange.end.toISOString(),
+                    end_date: endDate.toISOString(),
                     user_id: parseInt(selectedUserId)
                 });
                 setModalOpen(false);
