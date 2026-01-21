@@ -42,7 +42,7 @@ async def get_duty_eligible_users(
     """Get users who can take emergency duty (for plan creation)"""
     return db.query(User).filter(
         User.is_active == True,
-        User.can_take_duty == True
+        (User.can_take_duty == True) | (User.role == "planner")
     ).all()
 
 @router.get("/{user_id}", response_model=UserSchema)
