@@ -22,6 +22,7 @@ export default function LoginPage() {
         try {
             const data = await login(username, password);
             localStorage.setItem('token', data.access_token);
+            localStorage.setItem('role', data.role);  // Store role for navbar
             router.push('/calendar');
         } catch (err: any) {
             console.error(err);

@@ -22,8 +22,13 @@ def reset_admin():
             print("Admin user NOT found. Creating new...")
             admin = User(
                 username="admin",
+                email="admin@example.com",
                 password_hash=get_password_hash("admin123"),
-                role="admin"
+                first_name="System",
+                last_name="Administrator",
+                role="admin",
+                is_active=True,
+                can_take_duty=False
             )
             db.add(admin)
         

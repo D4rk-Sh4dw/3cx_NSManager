@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import auth, persons, plans, audit
+from routers import auth, plans, audit, users, export
 from init_db import init_db
 
 # Create tables
@@ -27,6 +27,7 @@ def read_root():
     return {"message": "Emergency Service Manager API is running"}
 
 app.include_router(auth.router)
-app.include_router(persons.router)
+app.include_router(users.router)
 app.include_router(plans.router)
 app.include_router(audit.router)
+app.include_router(export.router)

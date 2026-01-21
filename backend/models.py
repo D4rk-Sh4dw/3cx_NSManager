@@ -8,34 +8,34 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(String, default="viewer") # admin, planner, viewer
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    phone_number = Column(String, nullable=True)  # For call routing
+    role = Column(String, default="planner")  # admin, planner, buchhaltung
+    is_active = Column(Boolean, default=True)
+    can_take_duty = Column(Boolean, default=True)  # Eligible for emergency service
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), nullable=True)
 
-class Person(Base):
-    __tablename__ = "persons"
+    # Relationship to plans (user can be assigned to emergency duty)
+    plans = relationship("NotfallPlan", back_populates="user")
 
-    id = Column(Integer, primary_key=True, index=True)
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
-    external_number = Column(String, nullable=False) # e.g. +49170...
-
-    plans = relationship("NotfallPlan", back_populates="person")
 
 class NotfallPlan(Base):
     __tablename__ = "notfallplan"
 
     id = Column(Integer, primary_key=True, index=True)
-    start_date = Column(DateTime, nullable=False) # Start of shift
-    end_date = Column(DateTime, nullable=False) # End of shift
-    person_id = Column(Integer, ForeignKey("persons.id"), nullable=False)
+    start_date = Column(DateTime, nullable=False)  # Start of shift
+    end_date = Column(DateTime, nullable=False)  # End of shift
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Changed from person_id
     confirmed = Column(Boolean, default=False)
-    created_by = Column(String, nullable=True) # Username or ID
+    created_by = Column(String, nullable=True)  # Username or ID
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    person = relationship("Person", back_populates="plans")
+    user = relationship("User", back_populates="plans")  # Changed from person
     calendar_events = relationship("CalendarEvent", back_populates="plan", cascade="all, delete-orphan")
 
 class CalendarEvent(Base):

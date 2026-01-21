@@ -12,8 +12,14 @@ def init_db():
             print("Creating default admin user...")
             admin_user = User(
                 username="admin",
-                password_hash=get_password_hash("admin123"), # Default password
-                role="admin"
+                email="admin@example.com",  # Default email
+                password_hash=get_password_hash("admin123"),
+                first_name="System",
+                last_name="Administrator",
+                phone_number=None,
+                role="admin",
+                is_active=True,
+                can_take_duty=False  # Admin doesn't take duty by default
             )
             db.add(admin_user)
             db.commit()
