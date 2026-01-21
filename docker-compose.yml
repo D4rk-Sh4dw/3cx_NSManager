@@ -36,7 +36,7 @@ services:
     expose:
       - "8000"
     ports:
-      - "8000:8000"
+      - "8001:8000"
     command: uvicorn main:app --host 0.0.0.0 --port 8000
 
   scheduler:
@@ -60,13 +60,13 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: http://10.100.200.12:8000
+        NEXT_PUBLIC_API_URL: http://10.100.200.12:8001
     container_name: emergency-frontend
     restart: always
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://10.100.200.12:8000 # Configured for user IP
+      NEXT_PUBLIC_API_URL: http://10.100.200.12:8001 # Configured for user IP
       # If using server actions/SSR, we might need internal DNS
       API_URL_INTERNAL: http://backend:8000
     depends_on:
