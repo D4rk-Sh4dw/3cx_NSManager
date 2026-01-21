@@ -23,8 +23,17 @@ export default function LoginPage() {
             const data = await login(username, password);
             localStorage.setItem('token', data.access_token);
             router.push('/calendar');
-        } catch (err) {
-            setError('Invalid credentials');
+        } catch (err: any) {
+            console.error(err);
+            if (err.response) {
+                // Server responded with non-2xx code
+                setError(`Server Error: ${err.response.status} - ${JSON.stringify(err.response.data)}`);
+            } else if (err.request) {
+                // Request made but no response (Network Error)
+                setError(`Network Error: No response from server. Check console.`);
+            } else {
+                setError(`Client Error: ${err.message}`);
+            }
         } finally {
             setLoading(false);
         }
