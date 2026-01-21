@@ -213,9 +213,15 @@ export default function CalendarComponent() {
                                     ) : (
                                         <div className="p-3 border rounded bg-muted/50">
                                             <span className="text-sm font-medium">Als Diensthabender eintragen:</span>
-                                            <div className="text-lg font-bold mt-1">
-                                                {users.find(u => u.id.toString() === selectedUserId)?.first_name} {users.find(u => u.id.toString() === selectedUserId)?.last_name}
-                                            </div>
+                                            {selectedUserId ? (
+                                                <div className="text-lg font-bold mt-1">
+                                                    {users.find(u => u.id.toString() === selectedUserId)?.first_name} {users.find(u => u.id.toString() === selectedUserId)?.last_name}
+                                                </div>
+                                            ) : (
+                                                <div className="text-red-500 font-bold mt-1">
+                                                    Nicht berechtigt (User '{currentUsername}' nicht in 'Eligible Users' gefunden).
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
