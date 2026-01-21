@@ -1,10 +1,21 @@
 "use client";
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import CalendarComponent from '@/components/CalendarComponent';
 import Navbar from '@/components/Navbar';
 import { motion } from "framer-motion";
 
 export default function CalendarPage() {
+    const router = useRouter();
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.push('/login');
+        }
+    }, [router]);
+
     return (
         <main className="min-h-screen bg-background">
             <Navbar />

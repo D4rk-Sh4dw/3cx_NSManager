@@ -12,10 +12,7 @@ init_db()
 app = FastAPI(title="Emergency Service Manager API")
 
 # CORS
-origins = [
-    "http://localhost:3000",
-    "http://localhost",
-]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,

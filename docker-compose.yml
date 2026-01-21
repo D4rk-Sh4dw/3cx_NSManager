@@ -61,7 +61,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000 # Client side access
+      NEXT_PUBLIC_API_URL: http://10.100.200.12:8000 # Configured for user IP
       # If using server actions/SSR, we might need internal DNS
       API_URL_INTERNAL: http://backend:8000
     depends_on:

@@ -12,6 +12,11 @@ export default function AuditPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.push('/login');
+            return;
+        }
         loadLogs();
     }, []);
 
@@ -68,10 +73,10 @@ export default function AuditPage() {
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ring-1 ring-inset ${log.action === 'CREATE' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/10 dark:text-green-400' :
-                                                            log.action === 'DELETE' ? 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/10 dark:text-red-400' :
-                                                                log.action === 'UPDATE' ? 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/10 dark:text-blue-400' :
-                                                                    log.action === 'CONFIRM' ? 'bg-purple-50 text-purple-700 ring-purple-600/20 dark:bg-purple-900/10 dark:text-purple-400' :
-                                                                        'bg-gray-50 text-gray-600 ring-gray-500/10 dark:bg-gray-900/10 dark:text-gray-400'
+                                                        log.action === 'DELETE' ? 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/10 dark:text-red-400' :
+                                                            log.action === 'UPDATE' ? 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/10 dark:text-blue-400' :
+                                                                log.action === 'CONFIRM' ? 'bg-purple-50 text-purple-700 ring-purple-600/20 dark:bg-purple-900/10 dark:text-purple-400' :
+                                                                    'bg-gray-50 text-gray-600 ring-gray-500/10 dark:bg-gray-900/10 dark:text-gray-400'
                                                         }`}>
                                                         {log.action}
                                                     </span>
