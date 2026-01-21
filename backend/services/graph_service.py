@@ -10,17 +10,21 @@ CLIENT_SECRET = os.getenv("MS_CLIENT_SECRET")
 TARGET_FILE_EMAIL = os.getenv("MS_CALENDAR_EMAIL") # The email of the shared mailbox/calendar
 
 def get_access_token():
+    print(f"[GRAPH DEBUG] Checking credentials... Tenant: {TENANT_ID}, ClientID: {CLIENT_ID}")
+    
     if not (TENANT_ID and CLIENT_ID and CLIENT_SECRET):
-        print("MS Graph Credentials missing")
+        print("[GRAPH DEBUG] MS Graph Credentials missing in environment variables.")
         return None
     
     try:
+        print("[GRAPH DEBUG] Attempting to acquire token via ClientSecretCredential...")
         credential = ClientSecretCredential(TENANT_ID, CLIENT_ID, CLIENT_SECRET)
         # Request a token for Graph API
         token = credential.get_token("https://graph.microsoft.com/.default")
+        print("[GRAPH DEBUG] Token acquired successfully.")
         return token.token
     except Exception as e:
-        print(f"Error getting access token: {e}")
+        print(f"[GRAPH DEBUG] Error getting access token: {e}")
         return None
 
 def create_event(subject: str, start: datetime, end: datetime, attendee_email: str = None, attendee_name: str = None):
