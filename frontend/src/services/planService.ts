@@ -43,8 +43,3 @@ export const deletePlan = async (id: number) => {
     return response.data;
 };
 
-export const deletePlan = async (id: number) => {
-    // Not implemented in backend yet, but UI might need it?
-    // Let's implement delete in backend later.
-    return;
-};
