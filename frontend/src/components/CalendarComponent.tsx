@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Calendar as CalendarIcon, User as UserIcon, X, Trash2 } from 'lucide-react';
 import { useTheme } from "next-themes";
 import { jwtDecode } from "jwt-decode";
+import { stringToColor } from "@/lib/utils";
 
 export default function CalendarComponent() {
     const [events, setEvents] = useState([]);
@@ -44,23 +45,27 @@ export default function CalendarComponent() {
     const fetchEvents = async () => {
         try {
             const plans = await getPlans();
-            const mappedEvents = plans.map(p => ({
-                id: p.id.toString(),
-                title: p.user ? `${p.user.first_name} ${p.user.last_name}` : 'Unknown',
-                start: p.start_date,
-                end: p.end_date,
-                backgroundColor: p.confirmed ?
-                    (theme === 'dark' ? '#15803d' : '#22c55e') : // Green for confirmed
-                    (theme === 'dark' ? '#a16207' : '#eab308'), // Yellow for unconfirmed
-                borderColor: 'transparent',
-                textColor: '#ffffff',
-                extendedProps: {
-                    user_id: p.user_id,
-                    username: p.user?.username,
-                    confirmed: p.confirmed,
-                    created_by: p.created_by
-                }
-            }));
+            const mappedEvents = plans.map(p => {
+                const userColor = p.user?.username ? stringToColor(p.user.username) : '#808080';
+
+                return {
+                    id: p.id.toString(),
+                    title: p.user ? `${p.user.first_name} ${p.user.last_name}` : 'Unknown',
+                    start: p.start_date,
+                    end: p.end_date,
+                    backgroundColor: userColor,
+                    borderColor: 'transparent',
+                    textColor: '#ffffff',
+                    allDay: true, // Force "full day" block appearance
+                    classNames: p.confirmed ? [] : ['opacity-60', 'border-2', 'border-dashed'], // Visual cue for unconfirmed
+                    extendedProps: {
+                        user_id: p.user_id,
+                        username: p.user?.username,
+                        confirmed: p.confirmed,
+                        created_by: p.created_by
+                    }
+                };
+            });
             setEvents(mappedEvents as any);
         } catch (e) {
             console.error("Failed to fetch plans", e);
