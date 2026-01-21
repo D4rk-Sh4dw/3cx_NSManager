@@ -4,18 +4,21 @@ export interface Plan {
     id: number;
     start_date: string;
     end_date: string;
-    person_id: number;
+    user_id: number;
     confirmed: boolean;
-    person?: {
+    created_by?: string;
+    user?: {
+        username?: string;
         first_name: string;
         last_name: string;
+        email?: string;
     };
 }
 
 export interface PlanCreate {
     start_date: string;
     end_date: string;
-    person_id: number;
+    user_id: number;
 }
 
 export const getPlans = async (start?: string, end?: string) => {
