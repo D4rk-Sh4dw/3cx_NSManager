@@ -41,7 +41,14 @@ def create_plan(
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_planner_or_admin)
 ):
-    """Create plan (admin and planner only)"""
+    """Create plan (admin: anyone, planner: self only)"""
+    
+    # 1. Permission Check
+    target_user_id = plan.user_id
+    if current_user.role == "planner":
+        if target_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Planners can only schedule themselves")
+    
     # Validation: Overlap check
     overlap = db.query(NotfallPlan).filter(
         and_(
@@ -54,7 +61,7 @@ def create_plan(
         raise HTTPException(status_code=400, detail="Time slot already occupied")
 
     # Verify user_id exists and can take duty
-    assigned_user = db.query(User).filter(User.id == plan.user_id).first()
+    assigned_user = db.query(User).filter(User.id == target_user_id).first()
     if not assigned_user:
         raise HTTPException(status_code=404, detail="User not found")
     if not assigned_user.can_take_duty:
@@ -84,10 +91,18 @@ def update_plan(
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_planner_or_admin)
 ):
-    """Update plan (admin and planner only)"""
+    """Update plan (admin: all, planner: own only)"""
     db_plan = db.query(NotfallPlan).filter(NotfallPlan.id == plan_id).first()
     if not db_plan:
         raise HTTPException(status_code=404, detail="Plan not found")
+
+    # Permission Check
+    if current_user.role == "planner":
+        if db_plan.user_id != current_user.id:
+             raise HTTPException(status_code=403, detail="Planners can only update their own plans")
+        # Planner cannot reassign plan to someone else
+        if plan_update.user_id and plan_update.user_id != current_user.id:
+             raise HTTPException(status_code=403, detail="Planners cannot reassign plans")
     
     # Check if confirmed -> Delete old event
     if db_plan.confirmed:
@@ -130,10 +145,15 @@ def delete_plan(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_planner_or_admin)
 ):
-    """Delete plan (admin and planner only)"""
+    """Delete plan (admin: all, planner: own only)"""
     db_plan = db.query(NotfallPlan).filter(NotfallPlan.id == plan_id).first()
     if not db_plan:
         raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Permission Check
+    if current_user.role == "planner":
+        if db_plan.user_id != current_user.id:
+             raise HTTPException(status_code=403, detail="Planners can only delete their own plans")
     
     # Delete associated calendar event
     cal_event = db.query(CalendarEvent).filter(CalendarEvent.notfallplan_id == db_plan.id).first()
@@ -160,11 +180,16 @@ def confirm_plan(
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_planner_or_admin)
 ):
-    """Confirm plan and create calendar event (admin and planner only)"""
+    """Confirm plan (admin: all, planner: own only)"""
     db_plan = db.query(NotfallPlan).filter(NotfallPlan.id == plan_id).first()
     if not db_plan:
         raise HTTPException(status_code=404, detail="Plan not found")
     
+    # Permission Check
+    if current_user.role == "planner":
+        if db_plan.user_id != current_user.id:
+             raise HTTPException(status_code=403, detail="Planners can only confirm their own plans")
+
     if db_plan.confirmed:
         return {"status": "already_confirmed"}
 

@@ -5,38 +5,61 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { getPlans, createPlan, confirmPlan } from '@/services/planService';
-import { getPersons, Person } from '@/services/personService';
+import { getPlans, createPlan, confirmPlan, deletePlan } from '@/services/planService';
+import { getDutyEligibleUsers, User } from '@/services/userService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Calendar as CalendarIcon, User, X } from 'lucide-react';
+import { Check, Calendar as CalendarIcon, User as UserIcon, X, Trash2 } from 'lucide-react';
 import { useTheme } from "next-themes";
+import { jwtDecode } from "jwt-decode";
 
 export default function CalendarComponent() {
     const [events, setEvents] = useState([]);
-    const [persons, setPersons] = useState<Person[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [modalOpen, setModalOpen] = useState(false);
+    const [detailModalOpen, setDetailModalOpen] = useState(false);
     const [selectedRange, setSelectedRange] = useState<{ start: Date, end: Date } | null>(null);
-    const [selectedPersonId, setSelectedPersonId] = useState<string>("");
+    const [selectedUserId, setSelectedUserId] = useState<string>("");
+    const [selectedEvent, setSelectedEvent] = useState<any>(null);
     const { theme } = useTheme();
+    const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+    const [currentUsername, setCurrentUsername] = useState<string | null>(null);
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const decoded: any = jwtDecode(token);
+                setCurrentUserRole(decoded.role);
+                setCurrentUsername(decoded.sub);
+            } catch (e) {
+                console.error("Invalid token");
+            }
+        }
         fetchEvents();
-        fetchPersons();
-    }, []);
+        fetchUsers();
+    }, [theme]);
 
     const fetchEvents = async () => {
         try {
             const plans = await getPlans();
             const mappedEvents = plans.map(p => ({
                 id: p.id.toString(),
-                title: p.person ? `${p.person.first_name} ${p.person.last_name}` : 'Unknown',
+                title: p.user ? `${p.user.first_name} ${p.user.last_name}` : 'Unknown',
                 start: p.start_date,
                 end: p.end_date,
-                backgroundColor: p.confirmed ? (theme === 'dark' ? '#166534' : '#16a34a') : (theme === 'dark' ? '#b45309' : '#f59e0b'),
+                backgroundColor: p.confirmed ?
+                    (theme === 'dark' ? '#15803d' : '#22c55e') : // Green for confirmed
+                    (theme === 'dark' ? '#a16207' : '#eab308'), // Yellow for unconfirmed
                 borderColor: 'transparent',
-                textColor: '#ffffff'
+                textColor: '#ffffff',
+                extendedProps: {
+                    user_id: p.user_id,
+                    username: p.user?.username,
+                    confirmed: p.confirmed,
+                    created_by: p.created_by
+                }
             }));
             setEvents(mappedEvents as any);
         } catch (e) {
@@ -44,54 +67,87 @@ export default function CalendarComponent() {
         }
     };
 
-    // Re-fetch events when theme changes to update keys/colors if needed, 
-    // but FullCalendar handles primitive string changes usually. 
-    useEffect(() => {
-        fetchEvents();
-    }, [theme]);
-
-    const fetchPersons = async () => {
-        const data = await getPersons();
-        setPersons(data);
+    const fetchUsers = async () => {
+        try {
+            const data = await getDutyEligibleUsers();
+            setUsers(data);
+        } catch (e) { console.error("Failed to fetch users", e); }
     };
 
     const handleDateSelect = (selectInfo: any) => {
+        // Buchhaltung cannot create plans
+        if (currentUserRole === 'buchhaltung') return;
+
         setSelectedRange({ start: selectInfo.start, end: selectInfo.end });
+
+        // If planner, auto-select self if available in list (though backend enforces it anyway)
+        if (currentUserRole === 'planner' && currentUsername) {
+            const me = users.find(u => u.username === currentUsername);
+            if (me) setSelectedUserId(me.id.toString());
+        } else {
+            setSelectedUserId("");
+        }
         setModalOpen(true);
     };
 
     const handleSave = async () => {
-        if (selectedRange && selectedPersonId) {
+        if (selectedRange && selectedUserId) {
             try {
                 await createPlan({
                     start_date: selectedRange.start.toISOString(),
                     end_date: selectedRange.end.toISOString(),
-                    person_id: parseInt(selectedPersonId)
+                    user_id: parseInt(selectedUserId)
                 });
                 setModalOpen(false);
                 fetchEvents();
-            } catch (error) {
-                alert("Failed to create entry. Possible overlap.");
+            } catch (error: any) {
+                alert(error.response?.data?.detail || "Failed to create entry.");
             }
         }
     };
 
-    const handleEventClick = async (clickInfo: any) => {
-        if (confirm(`Do you want to confirm this event? ID: ${clickInfo.event.id}`)) {
-            try {
-                await confirmPlan(parseInt(clickInfo.event.id));
-                fetchEvents();
-            } catch (e) {
-                alert("Failed to confirm.");
-            }
+    const handleEventClick = (clickInfo: any) => {
+        // Buchhaltung read-only
+        if (currentUserRole === 'buchhaltung') return;
+
+        setSelectedEvent({
+            id: clickInfo.event.id,
+            title: clickInfo.event.title,
+            start: clickInfo.event.start,
+            end: clickInfo.event.end,
+            ...clickInfo.event.extendedProps
+        });
+        setDetailModalOpen(true);
+    };
+
+    const handleConfirm = async () => {
+        if (!selectedEvent) return;
+        try {
+            await confirmPlan(parseInt(selectedEvent.id));
+            setDetailModalOpen(false);
+            fetchEvents();
+        } catch (error: any) {
+            alert(error.response?.data?.detail || "Failed to confirm.");
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!selectedEvent) return;
+        if (!confirm("Wirklich löschen?")) return;
+        try {
+            await deletePlan(parseInt(selectedEvent.id));
+            setDetailModalOpen(false);
+            fetchEvents();
+        } catch (error: any) {
+            alert(error.response?.data?.detail || "Failed to delete.");
         }
     };
 
     return (
         <Card className="shadow-lg">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><CalendarIcon /> On-Call Schedule</CardTitle>
-                <CardDescription>Manage daily and weekly emergency duties.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><CalendarIcon /> Dienstplan</CardTitle>
+                <CardDescription>Planung der Notfalldienste (Tag/Woche).</CardDescription>
             </CardHeader>
             <CardContent className="p-0 sm:p-6 text-sm">
                 <FullCalendar
@@ -102,8 +158,8 @@ export default function CalendarComponent() {
                         right: 'dayGridMonth,timeGridWeek'
                     }}
                     initialView='dayGridMonth'
-                    editable={true}
-                    selectable={true}
+                    editable={currentUserRole === 'admin'} // Drag & Drop only for admin for now
+                    selectable={currentUserRole !== 'buchhaltung'}
                     selectMirror={true}
                     dayMaxEvents={true}
                     events={events}
@@ -111,49 +167,120 @@ export default function CalendarComponent() {
                     eventClick={handleEventClick}
                     height="75vh"
                     eventClassNames="cursor-pointer hover:opacity-80 transition-opacity"
+                    locale="de"
+                    firstDay={1}
                 />
 
+                {/* Create Modal */}
                 <AnimatePresence>
                     {modalOpen && (
-                        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <motion.div
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.9, opacity: 0 }}
-                                className="bg-card text-card-foreground p-6 rounded-lg shadow-xl border w-96 max-w-[90vw]"
+                                className="bg-card text-card-foreground p-6 rounded-lg shadow-xl border w-full max-w-md"
                             >
                                 <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-bold flex items-center gap-2"><User size={20} /> Assign Duty</h2>
+                                    <h2 className="text-xl font-bold flex items-center gap-2"><UserIcon size={20} /> Dienst eintragen</h2>
                                     <Button variant="ghost" size="icon" onClick={() => setModalOpen(false)}><X size={16} /></Button>
                                 </div>
 
                                 <div className="space-y-4">
-                                    <div className="text-sm text-muted-foreground">
+                                    <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
                                         {selectedRange && (
-                                            <p>From: {selectedRange.start.toLocaleDateString()} <br /> To: {selectedRange.end.toLocaleDateString()}</p>
+                                            <>
+                                                Von: {selectedRange.start.toLocaleString()} <br />
+                                                Bis: {selectedRange.end.toLocaleString()}
+                                            </>
                                         )}
                                     </div>
 
-                                    <select
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                        value={selectedPersonId}
-                                        onChange={(e) => setSelectedPersonId(e.target.value)}
-                                    >
-                                        <option value="">Select Person...</option>
-                                        {persons.map(p => (
-                                            <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
-                                        ))}
-                                    </select>
+                                    {currentUserRole === 'admin' ? (
+                                        <div>
+                                            <label className="text-sm font-medium mb-1 block">Benutzer auswählen</label>
+                                            <select
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                value={selectedUserId}
+                                                onChange={(e) => setSelectedUserId(e.target.value)}
+                                            >
+                                                <option value="">Bitte wählen...</option>
+                                                {users.map(u => (
+                                                    <option key={u.id} value={u.id}>{u.first_name} {u.last_name} ({u.role})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        <div className="p-3 border rounded bg-muted/50">
+                                            <span className="text-sm font-medium">Als Diensthabender eintragen:</span>
+                                            <div className="text-lg font-bold mt-1">
+                                                {users.find(u => u.id.toString() === selectedUserId)?.first_name} {users.find(u => u.id.toString() === selectedUserId)?.last_name}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex justify-end gap-2 mt-6">
-                                    <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
-                                    <Button onClick={handleSave} disabled={!selectedPersonId}><Check size={16} className="mr-2" /> Save</Button>
+                                    <Button variant="outline" onClick={() => setModalOpen(false)}>Abbrechen</Button>
+                                    <Button onClick={handleSave} disabled={!selectedUserId}><Check size={16} className="mr-2" /> Speichern</Button>
                                 </div>
                             </motion.div>
                         </div>
                     )}
                 </AnimatePresence>
+
+                {/* Detail/Action Modal */}
+                <AnimatePresence>
+                    {detailModalOpen && selectedEvent && (
+                        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="bg-card text-card-foreground p-6 rounded-lg shadow-xl border w-full max-w-md"
+                            >
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-bold">Dienst Details</h2>
+                                    <Button variant="ghost" size="icon" onClick={() => setDetailModalOpen(false)}><X size={16} /></Button>
+                                </div>
+
+                                <div className="space-y-4 mb-6">
+                                    <div className="flex justify-between border-b pb-2">
+                                        <span className="text-muted-foreground">Person:</span>
+                                        <span className="font-medium">{selectedEvent.title}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b pb-2">
+                                        <span className="text-muted-foreground">Start:</span>
+                                        <span>{selectedEvent.start?.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b pb-2">
+                                        <span className="text-muted-foreground">Ende:</span>
+                                        <span>{selectedEvent.end?.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b pb-2">
+                                        <span className="text-muted-foreground">Status:</span>
+                                        <span className={selectedEvent.confirmed ? "text-green-500 font-bold" : "text-yellow-500 font-bold"}>
+                                            {selectedEvent.confirmed ? "Bestätigt" : "Entwurf"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between gap-2">
+                                    <Button variant="destructive" onClick={handleDelete}>
+                                        <Trash2 size={16} className="mr-2" /> Löschen
+                                    </Button>
+
+                                    {!selectedEvent.confirmed && (
+                                        <Button onClick={handleConfirm} className="bg-green-600 hover:bg-green-700 text-white">
+                                            <Check size={16} className="mr-2" /> Bestätigen
+                                        </Button>
+                                    )}
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
             </CardContent>
         </Card>
     );
