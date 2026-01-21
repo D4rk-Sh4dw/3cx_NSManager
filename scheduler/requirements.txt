@@ -1,0 +1,7 @@
+apscheduler
+sqlalchemy
+psycopg2-binary
+requests
+msgraph-core
+azure-identity
+pytz

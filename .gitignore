@@ -1,0 +1,35 @@
+# Defaults
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesize
+
+# Specifics
+postgres_data/
+.env
+.env.*
+!.env.example
+
+# Frontend
+frontend/.next/
+frontend/build/
+frontend/dist/
+frontend/out/

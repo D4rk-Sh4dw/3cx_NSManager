@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-emergency_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  backend:
+    build: ./backend
+    container_name: emergency-backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-emergency_db}
+      SECRET_KEY: ${SECRET_KEY:-supersecretkey}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+    depends_on:
+      - db
+    networks:
+      - internal
+      - public_net # Needs access to internet for MS Graph / 3CX potentially, and for frontend to call it (via browser or server component?)
+                   # If Frontend is server-side, it needs access to backend.
+                   # If Frontend is client-side implementation, we need to expose backend port or use a proxy.
+                   # User said: "Frontend (Next.js)... Docker-Container".
+                   # Typically Next.js calls API.
+    expose:
+      - "8000"
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  scheduler:
+    build: ./scheduler
+    container_name: emergency-scheduler
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-emergency_db}
+      TZ: Europe/Berlin
+    depends_on:
+      - db
+    networks:
+      - internal
+      - public_net 
+
+  frontend:
+    build: ./frontend
+    container_name: emergency-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000 # Client side access
+      # If using server actions/SSR, we might need internal DNS
+      API_URL_INTERNAL: http://backend:8000 
+    depends_on:
+      - backend
+    networks:
+      - public_net
+      - internal
+
+networks:
+  internal:
+    internal: true
+  public_net:
+
+volumes:
+  postgres_data:
