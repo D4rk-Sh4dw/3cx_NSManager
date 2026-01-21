@@ -7,7 +7,7 @@ from models import NotfallPlan, AuditLog, CalendarEvent
 import models
 from schemas import Plan as PlanSchema, PlanCreate, PlanUpdate
 from routers.auth import get_current_user
-from services.msgraph import create_event, delete_event
+from services.graph_service import create_event, delete_event
 import json
 
 router = APIRouter(prefix="/plans", tags=["plans"])
