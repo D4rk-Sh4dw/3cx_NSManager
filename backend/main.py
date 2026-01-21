@@ -1,3 +1,14 @@
+import subprocess
+import sys
+
+# DEBUG: Print installed packages
+try:
+    print("--- PIP FREEZE ---")
+    subprocess.run([sys.executable, "-m", "pip", "freeze"], check=False)
+    print("------------------")
+except Exception as e:
+    print(f"Error checking pip: {e}")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
