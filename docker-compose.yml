@@ -22,15 +22,16 @@ services:
       SECRET_KEY: ${SECRET_KEY:-supersecretkey}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      # Microsoft Graph Configuration
+      MS_TENANT_ID: ${MS_TENANT_ID}
+      MS_CLIENT_ID: ${MS_CLIENT_ID}
+      MS_CLIENT_SECRET: ${MS_CLIENT_SECRET}
+      MS_CALENDAR_EMAIL: ${MS_CALENDAR_EMAIL}
     depends_on:
       - db
     networks:
       - internal
-      - public_net # Needs access to internet for MS Graph / 3CX potentially, and for frontend to call it (via browser or server component?)
-                   # If Frontend is server-side, it needs access to backend.
-                   # If Frontend is client-side implementation, we need to expose backend port or use a proxy.
-                   # User said: "Frontend (Next.js)... Docker-Container".
-                   # Typically Next.js calls API.
+      - public_net
     expose:
       - "8000"
     command: uvicorn main:app --host 0.0.0.0 --port 8000
@@ -42,11 +43,15 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-emergency_db}
       TZ: Europe/Berlin
+      # 3CX Configuration
+      CX_API_BASE: ${CX_API_BASE}
+      CX_API_KEY: ${CX_API_KEY}
+      CX_FORWARDING_DN: ${CX_FORWARDING_DN}
     depends_on:
       - db
     networks:
       - internal
-      - public_net 
+      - public_net
 
   frontend:
     build: ./frontend
@@ -57,7 +62,7 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000 # Client side access
       # If using server actions/SSR, we might need internal DNS
-      API_URL_INTERNAL: http://backend:8000 
+      API_URL_INTERNAL: http://backend:8000
     depends_on:
       - backend
     networks:
@@ -68,6 +73,7 @@ networks:
   internal:
     internal: true
   public_net:
+
 
 volumes:
   postgres_data:
