@@ -154,6 +154,8 @@ def delete_plan(
     if current_user.role == "planner":
         if db_plan.user_id != current_user.id:
              raise HTTPException(status_code=403, detail="Planners can only delete their own plans")
+        if db_plan.confirmed:
+             raise HTTPException(status_code=403, detail="Cannot delete confirmed plans")
     
     # Delete associated calendar event
     cal_event = db.query(CalendarEvent).filter(CalendarEvent.notfallplan_id == db_plan.id).first()

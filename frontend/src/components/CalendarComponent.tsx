@@ -276,9 +276,12 @@ export default function CalendarComponent() {
                                 </div>
 
                                 <div className="flex justify-between gap-2">
-                                    <Button variant="destructive" onClick={handleDelete}>
-                                        <Trash2 size={16} className="mr-2" /> Löschen
-                                    </Button>
+                                    {/* Delete Button: Show if Admin OR (Planner AND NOT Confirmed) */}
+                                    {(currentUserRole === 'admin' || (currentUserRole === 'planner' && !selectedEvent.confirmed)) && (
+                                        <Button variant="destructive" onClick={handleDelete}>
+                                            <Trash2 size={16} className="mr-2" /> Löschen
+                                        </Button>
+                                    )}
 
                                     {!selectedEvent.confirmed && (
                                         <Button onClick={handleConfirm} className="bg-green-600 hover:bg-green-700 text-white">
