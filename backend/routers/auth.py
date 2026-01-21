@@ -56,8 +56,25 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    print(f"DEBUG LOGIN Attempt: username={form_data.username}, password={form_data.password}")
     user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.password_hash):
+    
+    if not user:
+        print("DEBUG LOGIN: User not found in DB")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    print(f"DEBUG LOGIN: User found. ID={user.id}, Role={user.role}")
+    print(f"DEBUG LOGIN: Stored Hash starts with: {user.password_hash[:10]}...")
+    
+    verification = verify_password(form_data.password, user.password_hash)
+    print(f"DEBUG LOGIN: Password Verification Result: {verification}")
+
+    if not verification:
+        print("DEBUG LOGIN: Password hash verification FAILED")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
