@@ -1,76 +1,62 @@
-# 3CX Notfall-Routing Einrichten (CFD Methode)
+# 3CX Notfall-Routing Einrichten (Push Methode via XAPI)
 
-Dieser Guide erklärt, wie Sie die 3CX Telefonanlage so konfigurieren, dass sie eingehende Anrufe basierend auf dem aktuellen IT-Notfallplan automatisch weiterleitet.
+Wir verwenden den "Push"-Ansatz: Der Scheduler aktualisiert automatisch die Mobilnummer eines Dummy-Users in der 3CX.
 
-## 1. Konzept (Pull vs. Push)
-Wir verwenden die "Pull"-Methode. Das bedeutet, die 3CX "fragt" bei jedem Anruf unser System: *"Wer hat gerade Dienst?"*.
+**Vorteil:** Funktioniert auch, wenn der lokale Server/Internet ausfällt (die Umleitung bleibt in der Cloud bestehen).
 
-1.  Anruf geht an eine "Dummy" Nebenstelle / digitale Rezeption (die von CFD gesteuert wird).
-2.  CFD App macht einen **HTTP GET Request** an unseren Backend-Server.
-3.  Backend antwortet mit der Handynummer des Diensthabenden.
-4.  CFD leitet den Anruf an diese Nummer weiter (oder an die Zentrale, falls niemand Dienst hat).
+## 1. 3CX Vorbereitung
 
-## 2. Backend Vorbereitung
+### A. Dummy User anlegen
+1.  Erstellen Sie in der 3CX einen neuen Benutzer.
+2.  **Rolle:** User (oder eine Rolle ohne Admin-Rechte).
+3.  **Name:** "Notdienst Routing".
+4.  **Nummer:** z.B. **999** (Merk dir diese Nummer für `CX_DUMMY_EXT`).
+5.  **Email:** Eine technisch genutzte Email.
 
-Stellen Sie sicher, dass das Backend läuft und der neue Endpunkt erreichbar ist.
+### B. Weiterleitungsregeln konfigurieren
+Dieser Nutzer dient nur als "Weiche".
+1.  Gehen Sie in die Einstellungen des Users -> **Weiterleitungsregeln**.
+2.  Setzen Sie für **ALLE Status** (Verfügbar, Abwesend, DND, etc.) die Regel:
+    - **"Externe Anrufe":** Weiterleiten an -> **Mobiltelefon**.
+    - **"Interne Anrufe":** (Optional) Weiterleiten an -> Mobiltelefon.
 
-- **URL:** `https://<ihr-backend-server>:8001/integration/routing`
-- **Authentifizierung:** via Header `X-API-Key`
-- **Standard Key:** `secret-cx-key` (Änderbar in `.env`: `CX_API_KEY`)
+*Hinweis: Der Scheduler wird das Feld "Mobiltelefon" dieses Users dynamisch ändern.*
 
-**Testen Sie den Endpunkt:**
+### C. API Credentials erstellen (XAPI)
+1.  Gehen Sie in der 3CX Konsole auf **Admin** > **Integrations** > **API**.
+2.  Klicken Sie auf **Generate New** (oder ähnlich).
+3.  Notieren Sie sich:
+    - **Client ID**
+    - **Client Secret**
+    - Ihre 3CX URL (z.B. `https://my-company.3cx.eu`)
+
+## 2. Server/Scheduler Konfiguration
+
+Bearbeiten Sie die `.env` Datei auf Ihrem Server und tragen Sie die Werte ein:
+
+```properties
+# 3CX Integration (Push / XAPI)
+CX_TENANT_URL=https://my-company.3cx.eu
+CX_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+CX_CLIENT_SECRET=yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+CX_DUMMY_EXT=999
+CENTRAL_NUMBER=200
+```
+*(Die `CENTRAL_NUMBER` ist die Fallback-Nummer, falls kein Notdienstplan aktiv ist. Diese wird dann als Mobilnummer beim Dummy-User eingetragen).*
+
+## 3. Deployment
+
+Starten Sie den Scheduler neu, damit die Änderungen wirksam werden:
+
 ```bash
-curl -k -H "X-API-Key: secret-cx-key" https://localhost:8001/integration/routing
-```
-**Antwort (Beispiel):**
-```json
-{
-  "status": "active_plan",
-  "destination_number": "01712345678",
-  "source": "plan",
-  "display_name": "Max Mustermann"
-}
+docker-compose up -d --build scheduler
 ```
 
-## 3. Call Flow Designer (CFD) App Erstellen
-
-Laden Sie den [3CX Call Flow Designer](https://www.3cx.com/docs/manual/call-flow-designer-installation/) herunter.
-
-### Schritte im CFD:
-
-1.  **Neues Projekt:** `File > New Project` -> Name: `EmergencyRouting`.
-2.  **HTTP Request Komponente hinzufügen:**
-    - Ziehen Sie eine `HTTP Request` Komponente in den Main Flow.
-    - **Properties:**
-        - `Uri`: `"https://<ihr-backend-host>:8001/integration/routing"`
-        - `Method`: `GET`
-        - `Headers`: Klicken Sie auf den '...' Button und fügen Sie hinzu:
-            - Key: `X-API-Key`
-            - Value: `"secret-cx-key"` (oder Ihr Key)
-    - **Wichtig:** Da wir ein selbst-signiertes Zertifikat nutzen, muss in 3CX ggf. die Validierung deaktiviert werden oder das Root-CA importiert werden. In älteren Versionen gibt es dafür keine Option, dann muss ein offizielles Zertifikat (Let's Encrypt) verwendet werden. Für Tests: curl mit `-k`.
-3.  **JSON Response Parsen:**
-    - Verwenden Sie die `JsonParser` Komponente oder via C# Script `JsonConvert.DeserializeObject`.
-    - Extrahieren Sie `destination_number` aus der Antwort.
-4.  **Bedingte Weiterleitung (Transfer):**
-    - Ziehen Sie eine `Create a Condition` Komponente.
-    - **Branch 1 (Diensthabender gefunden):**
-        - Condition: `destination_number != ""`
-        - Action: `Transfer` Komponente -> `Destination`: `destination_number`.
-    - **Branch 2 (Fallback / Kein Dienst):**
-        - Condition: `Else`
-        - Action: `Transfer` Komponente -> `Destination`: z.B. `"200"` (Zentrale) oder Mailbox.
-
-## 4. App in 3CX Hochladen
-
-1.  Compilieren Sie das Projekt im CFD (`Build > Build`).
-2.  Login in 3CX Verwaltungskonsole -> **Erweitert** -> **Call Flow Apps**.
-3.  `Hinzufügen/Update` und wählen Sie die compilierte Archive-Datei (.zip).
-4.  Geben Sie der App eine interne Nummer (z.B. **999**).
-
-## 5. Eingehende Anrufe Routen
-
-1.  Gehen Sie zu **Eingehende Regeln** (Inbound Rules) oder **SIP Trunks**.
-2.  Wählen Sie die Hauptnummer/Notfallnummer.
-3.  Setzen Sie das Ziel ("Leiten an") auf **Call Flow Apps** -> **EmergencyRouting (999)**.
-
-Fertig! Jetzt wird jeder Anruf dynamisch geroutet.
+## 4. Testen
+1.  Erstellen Sie einen aktiven Notfallplan für "Max Mustermann" (Mobil: 0171-12345).
+2.  Warten Sie ca. 1 Minute (Scheduler Interval).
+3.  Prüfen Sie die Logs: `docker logs emergency-scheduler`.
+    - Meldung: `[3CX] Successfully updated mobile number.`
+4.  Prüfen Sie in der 3CX Konsole beim User 999:
+    - Das Feld "Mobilnummer" sollte jetzt `0171-12345` sein.
+5.  Rufen Sie die Nummer 999 an -> Sie sollten bei Max Mustermann landen.

@@ -47,9 +47,12 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-emergency_db}
       TZ: Europe/Berlin
       # 3CX Configuration
-      CX_API_BASE: ${CX_API_BASE}
-      CX_API_KEY: ${CX_API_KEY}
-      CX_FORWARDING_DN: ${CX_FORWARDING_DN}
+      # 3CX Configuration (XAPI)
+      CX_TENANT_URL: ${CX_TENANT_URL}
+      CX_CLIENT_ID: ${CX_CLIENT_ID}
+      CX_CLIENT_SECRET: ${CX_CLIENT_SECRET}
+      CX_DUMMY_EXT: ${CX_DUMMY_EXT}
+      CENTRAL_NUMBER: ${CENTRAL_NUMBER}
     depends_on:
       - db
     networks:
