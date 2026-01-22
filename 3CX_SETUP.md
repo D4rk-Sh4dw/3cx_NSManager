@@ -14,13 +14,13 @@ Wir verwenden die "Pull"-Methode. Das bedeutet, die 3CX "fragt" bei jedem Anruf 
 
 Stellen Sie sicher, dass das Backend läuft und der neue Endpunkt erreichbar ist.
 
-- **URL:** `http://<ihr-backend-server>:8000/integration/routing`
+- **URL:** `https://<ihr-backend-server>:8001/integration/routing`
 - **Authentifizierung:** via Header `X-API-Key`
 - **Standard Key:** `secret-cx-key` (Änderbar in `.env`: `CX_API_KEY`)
 
 **Testen Sie den Endpunkt:**
 ```bash
-curl -H "X-API-Key: secret-cx-key" http://localhost:8000/integration/routing
+curl -k -H "X-API-Key: secret-cx-key" https://localhost:8001/integration/routing
 ```
 **Antwort (Beispiel):**
 ```json
@@ -42,11 +42,12 @@ Laden Sie den [3CX Call Flow Designer](https://www.3cx.com/docs/manual/call-flow
 2.  **HTTP Request Komponente hinzufügen:**
     - Ziehen Sie eine `HTTP Request` Komponente in den Main Flow.
     - **Properties:**
-        - `Uri`: `"http://<ihr-backend-host>:8000/integration/routing"`
+        - `Uri`: `"https://<ihr-backend-host>:8001/integration/routing"`
         - `Method`: `GET`
         - `Headers`: Klicken Sie auf den '...' Button und fügen Sie hinzu:
             - Key: `X-API-Key`
             - Value: `"secret-cx-key"` (oder Ihr Key)
+    - **Wichtig:** Da wir ein selbst-signiertes Zertifikat nutzen, muss in 3CX ggf. die Validierung deaktiviert werden oder das Root-CA importiert werden. In älteren Versionen gibt es dafür keine Option, dann muss ein offizielles Zertifikat (Let's Encrypt) verwendet werden. Für Tests: curl mit `-k`.
 3.  **JSON Response Parsen:**
     - Verwenden Sie die `JsonParser` Komponente oder via C# Script `JsonConvert.DeserializeObject`.
     - Extrahieren Sie `destination_number` aus der Antwort.
