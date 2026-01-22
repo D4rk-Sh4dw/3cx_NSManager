@@ -23,6 +23,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-supersecretkey}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      SSL_SAN_IP: ${EXTERNAL_HOST:-127.0.0.1} # Used by entrypoint.sh to generate cert
       # Microsoft Graph Configuration
       MS_TENANT_ID: ${MS_TENANT_ID}
       MS_CLIENT_ID: ${MS_CLIENT_ID}
@@ -63,13 +64,13 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: https://10.100.200.12:8001
+        NEXT_PUBLIC_API_URL: https://${EXTERNAL_HOST:-localhost}:8001
     container_name: emergency-frontend
     restart: always
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://10.100.200.12:8001 # Configured for user IP
+      NEXT_PUBLIC_API_URL: https://${EXTERNAL_HOST:-localhost}:8001
       # If using server actions/SSR, we might need internal DNS
       API_URL_INTERNAL: https://backend:8000
       NODE_TLS_REJECT_UNAUTHORIZED: "0" # Allow self-signed certs for internal communication
