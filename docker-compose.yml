@@ -23,7 +23,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-supersecretkey}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
-      SSL_SAN_IP: ${EXTERNAL_HOST:-127.0.0.1} # Used by entrypoint.sh to generate cert
+      # SSL SAN IP removed as SSL is now handled by Nginx
       # Microsoft Graph Configuration
       MS_TENANT_ID: ${MS_TENANT_ID}
       MS_CLIENT_ID: ${MS_CLIENT_ID}
@@ -33,12 +33,9 @@ services:
       - db
     networks:
       - internal
-      - public_net
     expose:
       - "8000"
-    ports:
-      - "8001:8000"
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --ssl-keyfile /app/certs/key.pem --ssl-certfile /app/certs/cert.pem
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
 
   scheduler:
     build: ./scheduler
@@ -47,13 +44,13 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-emergency_db}
       TZ: Europe/Berlin
-      # 3CX Configuration
       # 3CX Configuration (XAPI)
       CX_TENANT_URL: ${CX_TENANT_URL}
       CX_CLIENT_ID: ${CX_CLIENT_ID}
       CX_CLIENT_SECRET: ${CX_CLIENT_SECRET}
       CX_DUMMY_EXT: ${CX_DUMMY_EXT}
       CENTRAL_NUMBER: ${CENTRAL_NUMBER}
+      # Scheduler needs to reach backend? No, it talks to DB + 3CX directly.
     depends_on:
       - db
     networks:
@@ -63,22 +60,41 @@ services:
   frontend:
     build:
       context: ./frontend
+      # Build args not really useful here for runtime env vars in Next.js public
+      # But standard practice to pass them if baked in.
       args:
-        NEXT_PUBLIC_API_URL: https://${EXTERNAL_HOST:-localhost}:8001
+        NEXT_PUBLIC_API_URL: /api
     container_name: emergency-frontend
     restart: always
-    ports:
-      - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://${EXTERNAL_HOST:-localhost}:8001
-      # If using server actions/SSR, we might need internal DNS
-      API_URL_INTERNAL: https://backend:8000
-      NODE_TLS_REJECT_UNAUTHORIZED: "0" # Allow self-signed certs for internal communication
+      # Browser sees relative path /api (routed by Nginx)
+      NEXT_PUBLIC_API_URL: /api
+      # Server (SSR) sees internal backend URL
+      API_URL_INTERNAL: http://backend:8000
     depends_on:
       - backend
     networks:
-      - public_net
       - internal
+    expose:
+      - "3000"
+
+  nginx:
+    build: ./nginx
+    container_name: emergency-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      EXTERNAL_HOST: ${EXTERNAL_HOST:-localhost}
+    volumes:
+      - nginx_certs:/etc/nginx/certs
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - internal
+      - public_net
 
 networks:
   internal:
@@ -88,3 +104,4 @@ networks:
 
 volumes:
   postgres_data:
+  nginx_certs:
