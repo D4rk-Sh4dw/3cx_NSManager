@@ -22,6 +22,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Trust Forwarded headers from Nginx (important for https redirects)
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+
 @app.get("/")
 def read_root():
     return {"message": "Emergency Service Manager API is running"}
