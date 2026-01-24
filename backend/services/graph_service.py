@@ -1,5 +1,6 @@
 import os
 import requests
+import uuid
 from datetime import datetime
 from azure.identity import ClientSecretCredential
 
@@ -30,7 +31,7 @@ def get_access_token():
 def create_event(subject: str, start: datetime, end: datetime, attendee_email: str = None, attendee_name: str = None):
     token = get_access_token()
     if not token:
-        return "MOCK_EVENT_ID_" + str(start.timestamp())
+        return f"MOCK_EVENT_ID_{start.timestamp()}_{uuid.uuid4()}"
 
     # Format dates to ISO
     start_str = start.strftime("%Y-%m-%dT%H:%M:%S")
