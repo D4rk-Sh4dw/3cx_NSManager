@@ -64,41 +64,48 @@ async def create_user(
     current_user: User = Depends(require_admin)
 ):
     """Create new user (admin only)"""
-    # Check if username or email already exists
-    existing = db.query(User).filter(
-        (User.username == user_data.username) | (User.email == user_data.email)
-    ).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Username or email already exists")
-    
-    new_user = User(
-        username=user_data.username,
-        email=user_data.email,
-        password_hash=get_password_hash(user_data.password),
-        first_name=user_data.first_name,
-        last_name=user_data.last_name,
-        phone_number=user_data.phone_number,
-        role=user_data.role,
-        is_active=user_data.is_active,
-        can_take_duty=user_data.can_take_duty
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    
-    # Audit log
-    audit = AuditLog(
-        user_id=current_user.id,
-        username=current_user.username,
-        action="CREATE",
-        target_table="users",
-        target_id=new_user.id,
-        new_value={"username": new_user.username, "email": new_user.email, "role": new_user.role}
-    )
-    db.add(audit)
-    db.commit()
-    
-    return new_user
+    try:
+        # Check if username or email already exists
+        existing = db.query(User).filter(
+            (User.username == user_data.username) | (User.email == user_data.email)
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username or email already exists")
+        
+        new_user = User(
+            username=user_data.username,
+            email=user_data.email,
+            password_hash=get_password_hash(user_data.password),
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            phone_number=user_data.phone_number,
+            role=user_data.role,
+            is_active=user_data.is_active,
+            can_take_duty=user_data.can_take_duty
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        # Audit log
+        audit = AuditLog(
+            user_id=current_user.id,
+            username=current_user.username,
+            action="CREATE",
+            target_table="users",
+            target_id=new_user.id,
+            new_value={"username": new_user.username, "email": new_user.email, "role": new_user.role}
+        )
+        db.add(audit)
+        db.commit()
+        
+        return new_user
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Internal Error: {str(e)}")
 
 @router.put("/{user_id}", response_model=UserSchema)
 async def update_user(
