@@ -125,13 +125,9 @@ export default function CalendarComponent() {
                     return new Date(date.getTime() - tzOffset).toISOString();
                 };
 
-                // Adjust end date to 23:59:59
-                const endDate = new Date(selectedRange.end);
-                endDate.setSeconds(endDate.getSeconds() - 1);
-
                 await createPlan({
                     start_date: toLocalISOString(selectedRange.start),
-                    end_date: toLocalISOString(endDate),
+                    end_date: toLocalISOString(selectedRange.end),
                     user_id: parseInt(selectedUserId)
                 });
                 setModalOpen(false);
