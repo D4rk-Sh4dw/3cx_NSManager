@@ -83,7 +83,28 @@ export default function CalendarComponent() {
         // Buchhaltung cannot create plans
         if (currentUserRole === 'buchhaltung') return;
 
-        setSelectedRange({ start: selectInfo.start, end: selectInfo.end });
+        let start = selectInfo.start;
+        let end = selectInfo.end;
+
+        // "Planner" role restriction: Always full weeks (Mon - Sun)
+        if (currentUserRole === 'planner') {
+            const day = start.getDay(); // 0 (Sun) to 6 (Sat)
+            // Calculate Monday of the selected week
+            // If Sunday (0), subtract 6 days. Else subtract day - 1.
+            const diff = start.getDate() - (day === 0 ? 6 : day - 1);
+
+            const monday = new Date(start);
+            monday.setDate(diff);
+            monday.setHours(0, 0, 0, 0);
+
+            const nextMonday = new Date(monday);
+            nextMonday.setDate(monday.getDate() + 7);
+
+            start = monday;
+            end = nextMonday;
+        }
+
+        setSelectedRange({ start: start, end: end });
 
         // If planner, auto-select self if available in list (though backend enforces it anyway)
         if (currentUserRole === 'planner' && currentUsername) {
@@ -294,7 +315,8 @@ export default function CalendarComponent() {
                                         </Button>
                                     )}
 
-                                    {!selectedEvent.confirmed && (
+                                    {/* Only Admin can confirm */}
+                                    {!selectedEvent.confirmed && currentUserRole === 'admin' && (
                                         <Button onClick={handleConfirm} className="bg-green-600 hover:bg-green-700 text-white">
                                             <Check size={16} className="mr-2" /> Bestätigen
                                         </Button>

@@ -48,6 +48,26 @@ def create_plan(
     if current_user.role == "planner":
         if target_user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Planners can only schedule themselves")
+        
+        # Enforce Weekly Duration (Mon-Sun)
+        # Check start day is Monday (0)
+        if plan.start_date.weekday() != 0:
+             raise HTTPException(status_code=400, detail="Planners must start plans on a Monday")
+        
+        # Check duration is exactly 7 days
+        # Frontend might send 23:59:59 end time, so we check delta
+        duration = plan.end_date - plan.start_date
+        # 6 days and 23 hours is close enough to 7 days, allowing for some leniency if seconds are off
+        # Better: check if end_date is the next Monday (or Sunday 23:59)
+        # Ideally: Start Monday 00:00 -> End Sunday 23:59:59 OR Monday 00:00 (next week)
+        
+        # Let's assume strict 7 days logic or close to it
+        total_seconds = duration.total_seconds()
+        # 7 days = 604800 seconds. 
+        # Allow small buffer? 
+        # If frontend sends Sunday 23:59:59, that is 604800 - 1 seconds.
+        if total_seconds < 604799: # Allow 1 sec tolerance
+             raise HTTPException(status_code=400, detail="Planners must book full weeks (Mon-Sun)")
     
     # Validation: Overlap check
     overlap = db.query(NotfallPlan).filter(
@@ -188,9 +208,8 @@ def confirm_plan(
         raise HTTPException(status_code=404, detail="Plan not found")
     
     # Permission Check
-    if current_user.role == "planner":
-        if db_plan.user_id != current_user.id:
-             raise HTTPException(status_code=403, detail="Planners can only confirm their own plans")
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can confirm plans")
 
     if db_plan.confirmed:
         return {"status": "already_confirmed"}
