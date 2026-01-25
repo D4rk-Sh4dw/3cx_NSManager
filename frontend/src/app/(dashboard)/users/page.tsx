@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import { getUsers, createUser, updateUser, deleteUser, User, UserCreate, UserUpdate } from '@/services/userService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -134,89 +133,84 @@ export default function UsersPage() {
     };
 
     return (
-        <main className="min-h-screen bg-background">
-            <Navbar />
-            <div className="container mx-auto mt-8 p-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                >
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle className="flex items-center gap-2">
-                                    <UserPlus size={20} /> Benutzerverwaltung
-                                </CardTitle>
-                                <CardDescription>Benutzer anlegen, bearbeiten und löschen.</CardDescription>
-                            </div>
-                            <Button onClick={() => { resetForm(); setEditingUser(null); setShowModal(true); }}>
-                                <Plus size={16} className="mr-2" /> Neuer Benutzer
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="rounded-md border">
-                                <table className="w-full text-sm text-left">
-                                    <thead className="bg-muted/50 text-muted-foreground">
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+        >
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">
+                            <UserPlus size={20} /> Benutzerverwaltung
+                        </CardTitle>
+                        <CardDescription>Benutzer anlegen, bearbeiten und löschen.</CardDescription>
+                    </div>
+                    <Button onClick={() => { resetForm(); setEditingUser(null); setShowModal(true); }}>
+                        <Plus size={16} className="mr-2" /> Neuer Benutzer
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <div className="rounded-md border">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-muted/50 text-muted-foreground">
+                                <tr>
+                                    <th className="px-4 py-3 font-medium">Name</th>
+                                    <th className="px-4 py-3 font-medium">E-Mail</th>
+                                    <th className="px-4 py-3 font-medium">Telefon</th>
+                                    <th className="px-4 py-3 font-medium">Rolle</th>
+                                    <th className="px-4 py-3 font-medium">Status</th>
+                                    <th className="px-4 py-3 font-medium text-right">Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                                <AnimatePresence>
+                                    {users.map(user => (
+                                        <motion.tr
+                                            key={user.id}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="hover:bg-muted/50 transition-colors"
+                                        >
+                                            <td className="px-4 py-3 font-medium">
+                                                {user.first_name} {user.last_name}
+                                                <div className="text-xs text-muted-foreground">@{user.username}</div>
+                                            </td>
+                                            <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
+                                            <td className="px-4 py-3 text-muted-foreground">{user.phone_number || '-'}</td>
+                                            <td className="px-4 py-3">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}>
+                                                    {user.role}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {user.is_active ? (
+                                                    <span className="text-green-600 flex items-center gap-1"><Check size={14} /> Aktiv</span>
+                                                ) : (
+                                                    <span className="text-red-600 flex items-center gap-1"><X size={14} /> Inaktiv</span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 text-right space-x-2">
+                                                <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
+                                                    <Edit size={16} />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" onClick={() => handleDelete(user.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </td>
+                                        </motion.tr>
+                                    ))}
+                                    {users.length === 0 && (
                                         <tr>
-                                            <th className="px-4 py-3 font-medium">Name</th>
-                                            <th className="px-4 py-3 font-medium">E-Mail</th>
-                                            <th className="px-4 py-3 font-medium">Telefon</th>
-                                            <th className="px-4 py-3 font-medium">Rolle</th>
-                                            <th className="px-4 py-3 font-medium">Status</th>
-                                            <th className="px-4 py-3 font-medium text-right">Aktionen</th>
+                                            <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Keine Benutzer gefunden.</td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="divide-y">
-                                        <AnimatePresence>
-                                            {users.map(user => (
-                                                <motion.tr
-                                                    key={user.id}
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0, height: 0 }}
-                                                    className="hover:bg-muted/50 transition-colors"
-                                                >
-                                                    <td className="px-4 py-3 font-medium">
-                                                        {user.first_name} {user.last_name}
-                                                        <div className="text-xs text-muted-foreground">@{user.username}</div>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
-                                                    <td className="px-4 py-3 text-muted-foreground">{user.phone_number || '-'}</td>
-                                                    <td className="px-4 py-3">
-                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}>
-                                                            {user.role}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        {user.is_active ? (
-                                                            <span className="text-green-600 flex items-center gap-1"><Check size={14} /> Aktiv</span>
-                                                        ) : (
-                                                            <span className="text-red-600 flex items-center gap-1"><X size={14} /> Inaktiv</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right space-x-2">
-                                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
-                                                            <Edit size={16} />
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(user.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                                                            <Trash2 size={16} />
-                                                        </Button>
-                                                    </td>
-                                                </motion.tr>
-                                            ))}
-                                            {users.length === 0 && (
-                                                <tr>
-                                                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Keine Benutzer gefunden.</td>
-                                                </tr>
-                                            )}
-                                        </AnimatePresence>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
-            </div>
+                                    )}
+                                </AnimatePresence>
+                            </tbody>
+                        </table>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Modal */}
             <AnimatePresence>
@@ -324,6 +318,6 @@ export default function UsersPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </main>
+        </motion.div>
     );
 }
