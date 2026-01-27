@@ -84,7 +84,9 @@ def create_plan(
     assigned_user = db.query(User).filter(User.id == target_user_id).first()
     if not assigned_user:
         raise HTTPException(status_code=404, detail="User not found")
-    if not assigned_user.can_take_duty:
+    
+    # Allow if can_take_duty is True OR if role is planner (consistent with get_duty_eligible_users)
+    if not assigned_user.can_take_duty and assigned_user.role != "planner":
         raise HTTPException(status_code=400, detail="User cannot take emergency duty")
 
     db_plan = NotfallPlan(**plan.dict(), created_by=current_user.username)
