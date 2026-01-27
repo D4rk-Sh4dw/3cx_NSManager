@@ -53,11 +53,11 @@ export default function CalendarComponent() {
                     title: p.user ? `${p.user.first_name} ${p.user.last_name}` : 'Unknown',
                     start: p.start_date,
                     end: p.end_date,
-                    backgroundColor: userColor,
-                    borderColor: 'transparent',
-                    textColor: '#ffffff',
+                    backgroundColor: p.confirmed ? userColor : 'transparent',
+                    borderColor: userColor,
+                    textColor: p.confirmed ? '#ffffff' : userColor,
                     allDay: true, // Force "full day" block appearance
-                    classNames: p.confirmed ? [] : ['opacity-60', 'border-2', 'border-dashed'], // Visual cue for unconfirmed
+                    classNames: p.confirmed ? [] : ['border-2', 'border-dashed', 'font-bold'], // Visual cue for unconfirmed
                     extendedProps: {
                         user_id: p.user_id,
                         username: p.user?.username,
