@@ -76,7 +76,7 @@ export default function UsersPage() {
             await loadUsers();
         } catch (error: any) {
             console.error('Failed to save user:', error);
-            alert(error.response?.data?.detail || 'Failed to save user');
+            alert(error.response?.data?.detail || 'Benutzer konnte nicht gespeichert werden');
         } finally {
             setLoading(false);
         }
@@ -104,7 +104,7 @@ export default function UsersPage() {
                 await deleteUser(id);
                 loadUsers();
             } catch (error: any) {
-                alert(error.response?.data?.detail || 'Failed to delete user');
+                alert(error.response?.data?.detail || 'Benutzer konnte nicht gelöscht werden');
             }
         }
     };

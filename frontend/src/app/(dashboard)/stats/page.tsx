@@ -20,7 +20,7 @@ export default function StatsPage() {
                     <tr>
                         <th className="px-4 py-3 rounded-tl-lg">Mitarbeiter</th>
                         <th className="px-4 py-3 text-right">Tage</th>
-                        <th className="px-4 py-3 text-right rounded-tr-lg">Einsätze</th>
+                        <th className="px-4 py-3 text-right rounded-tr-lg">Dienste</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-border">

@@ -76,7 +76,7 @@ export function AppHeader() {
                 <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
                     <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                     <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                    <span className="sr-only">Toggle theme</span>
+                    <span className="sr-only">Design wechseln</span>
                 </Button>
 
                 <div className="relative">
@@ -97,7 +97,7 @@ export function AppHeader() {
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                 className="absolute right-0 mt-2 w-48 bg-popover rounded-md shadow-lg border border-border py-1 z-50 text-popover-foreground"
                             >
-                                <div className="px-2 py-1.5 text-sm font-semibold border-b">Mein Account</div>
+                                <div className="px-2 py-1.5 text-sm font-semibold border-b">Mein Konto</div>
                                 <button
                                     onClick={() => { setModalOpen(true); setUserMenuOpen(false); }}
                                     className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2"
@@ -108,7 +108,7 @@ export function AppHeader() {
                                     onClick={handleLogout}
                                     className="w-full text-left px-2 py-1.5 text-sm hover:bg-destructive/10 text-destructive hover:text-destructive flex items-center gap-2"
                                 >
-                                    <LogOut className="w-4 h-4" /> Logout
+                                    <LogOut className="w-4 h-4" /> Abmelden
                                 </button>
                             </motion.div>
                         )}

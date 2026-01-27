@@ -38,18 +38,18 @@ export default function AuditPage() {
         >
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><FileClock /> System Audit Log</CardTitle>
-                    <CardDescription>Track all changes and actions within the system.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><FileClock /> System Audit-Protokoll</CardTitle>
+                    <CardDescription>Alle Änderungen und Aktionen im System verfolgen.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="rounded-md border">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-muted/50 text-muted-foreground">
                                 <tr>
-                                    <th className="px-4 py-3 font-medium">Time</th>
-                                    <th className="px-4 py-3 font-medium">User</th>
-                                    <th className="px-4 py-3 font-medium">Action</th>
-                                    <th className="px-4 py-3 font-medium">Target</th>
+                                    <th className="px-4 py-3 font-medium">Zeit</th>
+                                    <th className="px-4 py-3 font-medium">Benutzer</th>
+                                    <th className="px-4 py-3 font-medium">Aktion</th>
+                                    <th className="px-4 py-3 font-medium">Ziel</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y">
@@ -85,7 +85,7 @@ export default function AuditPage() {
                                 ))}
                                 {!loading && logs.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No logs found.</td>
+                                        <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">Keine Einträge gefunden.</td>
                                     </tr>
                                 )}
                             </tbody>

@@ -49,8 +49,8 @@ export default function LoginPage() {
             >
                 <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary">
                     <CardHeader className="text-center">
-                        <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-                        <p className="text-muted-foreground text-sm">Please sign in to continue</p>
+                        <CardTitle className="text-2xl font-bold">Willkommen zurück</CardTitle>
+                        <p className="text-muted-foreground text-sm">Bitte melden Sie sich an</p>
                     </CardHeader>
                     <CardContent>
                         {error && (
@@ -68,7 +68,7 @@ export default function LoginPage() {
                                     <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         type="text"
-                                        placeholder="Username"
+                                        placeholder="Benutzername"
                                         className="pl-9"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
@@ -81,7 +81,7 @@ export default function LoginPage() {
                                     <KeyRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         type="password"
-                                        placeholder="Password"
+                                        placeholder="Passwort"
                                         className="pl-9"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
@@ -90,12 +90,12 @@ export default function LoginPage() {
                                 </div>
                             </div>
                             <Button type="submit" className="w-full" disabled={loading}>
-                                {loading ? "Signing In..." : "Sign In"}
+                                {loading ? "Anmelden..." : "Anmelden"}
                             </Button>
                         </form>
                     </CardContent>
                     <CardFooter className="justify-center text-xs text-muted-foreground">
-                        Emergency Service Management System
+                        Bereitschaftsdienst Management System
                     </CardFooter>
                 </Card>
             </motion.div>

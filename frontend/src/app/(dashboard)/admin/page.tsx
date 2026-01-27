@@ -38,7 +38,7 @@ export default function AdminPage() {
     };
 
     const handleDelete = async (id: number) => {
-        if (confirm("Delete this person?")) {
+        if (confirm("Diese Person wirklich löschen?")) {
             await deletePerson(id);
             loadPersons();
         }
@@ -53,31 +53,31 @@ export default function AdminPage() {
             >
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><UserPlus size={20} /> Add Person</CardTitle>
-                        <CardDescription>Register a new emergency contact.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><UserPlus size={20} /> Person hinzufügen</CardTitle>
+                        <CardDescription>Neuen Notfallkontakt registrieren.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <Input
-                                placeholder="First Name"
+                                placeholder="Vorname"
                                 value={formData.first_name}
                                 onChange={e => setFormData({ ...formData, first_name: e.target.value })}
                                 required
                             />
                             <Input
-                                placeholder="Last Name"
+                                placeholder="Nachname"
                                 value={formData.last_name}
                                 onChange={e => setFormData({ ...formData, last_name: e.target.value })}
                                 required
                             />
                             <Input
-                                placeholder="Phone (+49...)"
+                                placeholder="Telefon (+49...)"
                                 value={formData.external_number}
                                 onChange={e => setFormData({ ...formData, external_number: e.target.value })}
                                 required
                             />
                             <Button type="submit" className="w-full" disabled={loading}>
-                                {loading ? "Adding..." : <><Plus size={16} className="mr-2" /> Add Person</>}
+                                {loading ? "Hinzufügen..." : <><Plus size={16} className="mr-2" /> Person hinzufügen</>}
                             </Button>
                         </form>
                     </CardContent>
@@ -92,8 +92,8 @@ export default function AdminPage() {
             >
                 <Card>
                     <CardHeader>
-                        <CardTitle>Personnel List</CardTitle>
-                        <CardDescription>Manage available emergency contacts.</CardDescription>
+                        <CardTitle>Personalliste</CardTitle>
+                        <CardDescription>Verfügbare Notfallkontakte verwalten.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="rounded-md border">
@@ -101,8 +101,8 @@ export default function AdminPage() {
                                 <thead className="bg-muted/50 text-muted-foreground">
                                     <tr>
                                         <th className="px-4 py-3 font-medium">Name</th>
-                                        <th className="px-4 py-3 font-medium">Number</th>
-                                        <th className="px-4 py-3 font-medium text-right">Actions</th>
+                                        <th className="px-4 py-3 font-medium">Nummer</th>
+                                        <th className="px-4 py-3 font-medium text-right">Aktionen</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y">
@@ -126,7 +126,7 @@ export default function AdminPage() {
                                         ))}
                                         {persons.length === 0 && (
                                             <tr>
-                                                <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">No persons found.</td>
+                                                <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">Keine Personen gefunden.</td>
                                             </tr>
                                         )}
                                     </AnimatePresence>

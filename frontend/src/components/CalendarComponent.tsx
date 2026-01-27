@@ -133,7 +133,7 @@ export default function CalendarComponent() {
                 setModalOpen(false);
                 fetchEvents();
             } catch (error: any) {
-                alert(error.response?.data?.detail || "Failed to create entry.");
+                alert(error.response?.data?.detail || "Eintrag konnte nicht erstellt werden.");
             }
         }
     };
@@ -159,7 +159,7 @@ export default function CalendarComponent() {
             setDetailModalOpen(false);
             fetchEvents();
         } catch (error: any) {
-            alert(error.response?.data?.detail || "Failed to confirm.");
+            alert(error.response?.data?.detail || "Bestätigung fehlgeschlagen.");
         }
     };
 
@@ -171,7 +171,7 @@ export default function CalendarComponent() {
             setDetailModalOpen(false);
             fetchEvents();
         } catch (error: any) {
-            alert(error.response?.data?.detail || "Failed to delete.");
+            alert(error.response?.data?.detail || "Löschen fehlgeschlagen.");
         }
     };
 

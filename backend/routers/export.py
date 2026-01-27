@@ -41,7 +41,6 @@ async def export_plans(
         end_of_period = datetime(year, month, last_day, 23, 59, 59)
         
         # Filter plans that overlap with the selected month
-        # overlap logic: start < end_of_period AND end > start_of_period
         query = query.filter(
             NotfallPlan.start_date <= end_of_period,
             NotfallPlan.end_date >= start_of_period
@@ -50,30 +49,23 @@ async def export_plans(
     plans = query.all()
     
     # Calculate days per user if filtered
-    user_days = {}
+    user_totals = {}
     if start_of_period and end_of_period:
-        all_plans_in_period = plans # Since we already filtered
-        for plan in all_plans_in_period:
+        for plan in plans:
             if not plan.user_id:
                 continue
-                
-            # Calculate overlap duration in days
-            # Intersect plan interval [p_start, p_end] with period interval [m_start, m_end]
+            
             p_start = max(plan.start_date, start_of_period)
             p_end = min(plan.end_date, end_of_period)
             
             if p_start < p_end:
-                duration = (p_end - p_start).days + 1 # +1 to include the partial day effectively as a day of duty? 
-                # Actually, let's look at how "days" are usually counted. 
-                # If a shift is 1 week (Monday to Monday), it's 7 days.
-                # If we purely do diff, Monday 00:00 to Monday 00:00 is exactly 7.0 days.
-                # Let's count full 24h periods or just the raw difference in days.
-                # User asked for "wieviele tage ... geleistet hat".
-                # Let's count the number of distinct days touched or just sum the duration.
-                # Simple approach: (end - start).total_seconds() / 86400.
-                # But typically shifts might be cleaner. Let's stick to days difference.
                 days = (p_end - p_start).total_seconds() / (24 * 3600)
-                user_days[plan.user_id] = user_days.get(plan.user_id, 0) + days
+                if plan.user_id not in user_totals:
+                    user_totals[plan.user_id] = {
+                        "name": f"{plan.user.first_name} {plan.user.last_name}",
+                        "days": 0
+                    }
+                user_totals[plan.user_id]["days"] += days
 
     output = io.StringIO()
     # Add BOM for Excel compatibility
@@ -84,8 +76,7 @@ async def export_plans(
         "ID", "Start", "Ende", "Benutzer ID", "Vorname", "Nachname", 
         "Telefon", "E-Mail", "Bestätigt", "Erstellt am", "Erstellt von"
     ]
-    if month and year:
-        headers.append("Tage im Zeitraum")
+    # Removed "Tage im Zeitraum" from headers
 
     writer.writerow(headers)
     
@@ -105,14 +96,17 @@ async def export_plans(
             plan.created_at.strftime("%Y-%m-%d %H:%M") if plan.created_at else "",
             plan.created_by or ""
         ]
-        
-        if month and year:
-            days = 0
-            if user:
-                 days = user_days.get(user.id, 0)
-            row.append(f"{days:.2f}")
-
+        # Removed appending days column to row
         writer.writerow(row)
+    
+    # Append summary if filtered
+    if month and year and user_totals:
+        writer.writerow([])
+        writer.writerow([])
+        writer.writerow(["Mitarbeiter Auswertung"])
+        writer.writerow(["Name", "Gesamt Tage"])
+        for user_id, data in user_totals.items():
+            writer.writerow([data["name"], f"{data['days']:.2f}"])
     
     output.seek(0)
     filename_part = f"_{year}_{month}" if month and year else ""
@@ -155,7 +149,7 @@ async def export_plans_pdf(
     plans = query.order_by(NotfallPlan.start_date.desc()).all()
     
     # Calculate days per user if filtered
-    user_days = {}
+    user_totals = {}
     if start_of_period and end_of_period:
         for plan in plans:
             if not plan.user_id:
@@ -164,7 +158,12 @@ async def export_plans_pdf(
             p_end = min(plan.end_date, end_of_period)
             if p_start < p_end:
                 days = (p_end - p_start).total_seconds() / (24 * 3600)
-                user_days[plan.user_id] = user_days.get(plan.user_id, 0) + days
+                if plan.user_id not in user_totals:
+                    user_totals[plan.user_id] = {
+                        "name": f"{plan.user.first_name} {plan.user.last_name}",
+                        "days": 0
+                    }
+                user_totals[plan.user_id]["days"] += days
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), topMargin=30, bottomMargin=30)
@@ -183,8 +182,7 @@ async def export_plans_pdf(
     elements.append(Spacer(1, 20))
     
     header = ["Start", "Ende", "Name", "Telefon", "E-Mail", "Status", "Erstellt von"]
-    if month and year:
-        header.append("Tage")
+    # Removed "Tage" from header
         
     data = [header]
     
@@ -199,18 +197,11 @@ async def export_plans_pdf(
         creator = plan.created_by or "System"
         
         row = [start, end, name, phone, email, status, creator]
-        
-        if month and year:
-            days = 0
-            if user:
-                days = user_days.get(user.id, 0)
-            row.append(f"{days:.1f}")
-            
+        # Removed appending days to row
         data.append(row)
         
     col_widths = [90, 90, 120, 90, 150, 60, 80]
-    if month and year:
-        col_widths.append(40) # Width for 'Tage' column
+    # Removed appending Tage column width
         
     table = Table(data, colWidths=col_widths)
     
@@ -226,6 +217,31 @@ async def export_plans_pdf(
     ]))
     
     elements.append(table)
+
+    # Add Summary Table if filtered
+    if month and year and user_totals:
+        elements.append(Spacer(1, 30))
+        elements.append(Paragraph("Mitarbeiter Auswertung", styles["Heading2"]))
+        elements.append(Spacer(1, 10))
+        
+        summary_header = ["Mitarbeiter", "Gesamt Tage"]
+        summary_data = [summary_header]
+        
+        for user_id, data in user_totals.items():
+            summary_data.append([data["name"], f"{data['days']:.2f}"])
+            
+        summary_table = Table(summary_data, colWidths=[200, 100], hAlign='LEFT')
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ]))
+        elements.append(summary_table)
+
     doc.build(elements)
     
     buffer.seek(0)
