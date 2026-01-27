@@ -11,6 +11,8 @@ export default function ExportPage() {
     const router = useRouter();
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [loadingPlans, setLoadingPlans] = useState(false);
+    const [loadingAudit, setLoadingAudit] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -33,7 +35,6 @@ export default function ExportPage() {
             console.error('Export failed:', error);
             alert('Export fehlgeschlagen');
         } finally {
-            setLoadingPlans(false);
             setLoadingPlans(false);
         }
     };
