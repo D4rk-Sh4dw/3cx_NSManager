@@ -7,7 +7,7 @@ import { changePassword } from '@/services/authService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTheme } from "next-themes";
-import { LogOut, User, Moon, Sun, Lock, Menu, X, Calendar, FileText, Download, UserCog, Users } from "lucide-react";
+import { LogOut, User, Moon, Sun, Lock, Menu, X, Calendar, FileText, Download, UserCog, Users, BarChart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +52,7 @@ export function AppHeader() {
         { href: "/audit", label: "Audit-Log", icon: FileText, roles: ["admin", "planner", "buchhaltung"] },
         { href: "/users", label: "Benutzerverwaltung", icon: UserCog, roles: ["admin"] },
         { href: "/export", label: "Daten-Export", icon: Download, roles: ["admin", "buchhaltung"] },
+        { href: "/stats", label: "Statistik", icon: BarChart, roles: ["admin", "buchhaltung"] },
     ];
     const filteredLinks = navLinks.filter(link => !userRole || link.roles.includes(userRole));
 
@@ -66,6 +67,12 @@ export function AppHeader() {
             </div>
 
             <div className="flex items-center gap-2 relative">
+                {userRole && (
+                    <div className="hidden md:flex items-center gap-2 p-2 rounded-lg bg-secondary/50 text-xs font-mono text-muted-foreground border mr-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                        {userRole.toUpperCase()}
+                    </div>
+                )}
                 <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
                     <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                     <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

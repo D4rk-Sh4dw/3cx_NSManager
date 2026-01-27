@@ -238,7 +238,7 @@ export default function CalendarComponent() {
                                             >
                                                 <option value="">Bitte wählen...</option>
                                                 {users.map(u => (
-                                                    <option key={u.id} value={u.id}>{u.first_name} {u.last_name} ({u.role})</option>
+                                                    <option key={u.id} value={u.id}>{u.first_name} {u.last_name}{u.role ? ` (${u.role})` : ''}</option>
                                                 ))}
                                             </select>
                                         </div>

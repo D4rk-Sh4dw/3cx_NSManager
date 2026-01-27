@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Calendar, Users, FileText, Download, UserCog, Menu } from "lucide-react";
+import { Calendar, Users, FileText, Download, UserCog, Menu, BarChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +29,7 @@ export function AppSidebar({ className }: SidebarProps) {
         { href: "/audit", label: "Audit-Log", icon: FileText, roles: ["admin", "planner", "buchhaltung"] },
         { href: "/users", label: "Benutzerverwaltung", icon: UserCog, roles: ["admin"] },
         { href: "/export", label: "Daten-Export", icon: Download, roles: ["admin", "buchhaltung"] },
+        { href: "/stats", label: "Statistik", icon: BarChart, roles: ["admin", "buchhaltung"] },
     ];
 
     const filteredLinks = navLinks.filter(link =>
@@ -45,7 +46,7 @@ export function AppSidebar({ className }: SidebarProps) {
                         <div className="bg-primary text-primary-foreground p-1 rounded">
                             <Users size={20} />
                         </div>
-                        <h2 className="text-lg font-bold tracking-tight">Management</h2>
+                        <h2 className="text-lg font-bold tracking-tight">{process.env.NEXT_PUBLIC_SIDEBAR_TITLE || "Management"}</h2>
                     </div>
                     <div className="space-y-1">
                         {filteredLinks.map((link) => {
@@ -69,14 +70,7 @@ export function AppSidebar({ className }: SidebarProps) {
                 </div>
                 {/* Optional: Add a section for help or bottom links */}
             </div>
-            <div className="absolute bottom-4 left-4 right-4">
-                {userRole && (
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 text-xs font-mono text-muted-foreground border">
-                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                        {userRole.toUpperCase()}
-                    </div>
-                )}
-            </div>
+
         </div>
     );
 }

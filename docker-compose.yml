@@ -65,11 +65,13 @@ services:
       # But standard practice to pass them if baked in.
       args:
         NEXT_PUBLIC_API_URL: /api
+        NEXT_PUBLIC_SIDEBAR_TITLE: ${NEXT_PUBLIC_SIDEBAR_TITLE:-Management}
     container_name: emergency-frontend
     restart: always
     environment:
       # Browser sees relative path /api (routed by Nginx)
       NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_SIDEBAR_TITLE: ${NEXT_PUBLIC_SIDEBAR_TITLE:-Management}
       # Server (SSR) sees internal backend URL
       API_URL_INTERNAL: http://backend:8000
     depends_on:
