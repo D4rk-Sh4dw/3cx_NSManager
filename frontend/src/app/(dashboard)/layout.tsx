@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppHeader } from "@/components/app-header";
 
@@ -6,6 +10,22 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode
 }) {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const router = useRouter();
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.push('/login');
+        } else {
+            setIsAuthenticated(true);
+        }
+    }, [router]);
+
+    if (!isAuthenticated) {
+        return null; // Or a loading spinner
+    }
+
     return (
         <div className="flex h-screen w-full bg-muted/40">
             <AppSidebar />
