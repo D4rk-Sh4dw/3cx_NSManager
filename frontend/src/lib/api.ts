@@ -21,7 +21,10 @@ api.interceptors.response.use(
     (error) => {
         if (error.response) {
             console.error('API ERROR RESPONSE:', error.response.status, error.response.data);
-            if (error.response.status === 401) {
+            // Auth endpoints report their own failures - redirecting here would
+            // reload the login page and swallow the error message.
+            const isAuthCall = error.config?.url?.startsWith('/auth/');
+            if (error.response.status === 401 && !isAuthCall) {
                 console.warn('Unauthorized! Redirecting to login...');
                 localStorage.removeItem('token');
                 if (typeof window !== 'undefined') {
