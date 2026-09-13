@@ -14,7 +14,7 @@ Beide Mails werden in der Tabelle `notification_log` protokolliert. Für die Woc
 Der Transport wird automatisch gewählt:
 
 1. **SMTP** – wenn `SMTP_HOST` gesetzt ist.
-2. **Microsoft Graph `sendMail`** – wenn MS-Graph-Credentials und ein Absender (`MAIL_FROM`, ersatzweise `MS_CALENDAR_EMAIL`) vorhanden sind. Benötigt die Application Permission `Mail.Send`, siehe [MICROSOFT_GRAPH_SETUP.md](MICROSOFT_GRAPH_SETUP.md).
+2. **Microsoft Graph `sendMail`** – wenn MS-Graph-Credentials und ein Absender (`MAIL_FROM`, ersatzweise `MS_CALENDAR_EMAIL`) vorhanden sind. Benötigt die Application Permission `Mail.Send` und ein echtes Absenderpostfach — Schritt-für-Schritt inklusive Einschränkung auf ein einzelnes Postfach und Fehlerdiagnose in [MICROSOFT_GRAPH_SETUP.md, Abschnitt 6](MICROSOFT_GRAPH_SETUP.md#6-mail-versand-über-graph-optional).
 3. **Mock** – ist nichts konfiguriert, wird die Mail nur ins Log geschrieben (`[MAIL] MOCK ...`). Das System läuft dadurch auch ohne Mail-Setup weiter.
 
 ## Konfiguration (`.env`)
