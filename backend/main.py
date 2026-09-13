@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import auth, plans, audit, users, export
+from routers import auth, plans, audit, users, export, notifications
 from init_db import init_db
 
 # Create tables
@@ -35,5 +35,6 @@ app.include_router(users.router)
 app.include_router(plans.router)
 app.include_router(audit.router)
 app.include_router(export.router)
+app.include_router(notifications.router)
 from routers import stats
 app.include_router(stats.router)

@@ -40,7 +40,10 @@ Die App braucht Schreibzugriff auf Kalender.
 4.  Suche nach `Calendars`.
 5.  Wähle `Calendars.ReadWrite` (unter Application Permissions).
 6.  Klicke **Add permissions**.
-7.  ⚠️ **WICHTIG**: Du musst jetzt auf den Button **Grant admin consent for [Deine Organisation]** klicken, damit die Berechtigungen aktiv werden.
+7.  Wenn die Benachrichtigungs-Mails über Graph (statt SMTP) verschickt werden sollen, füge zusätzlich `Mail.Send` (Application Permission) hinzu.
+8.  ⚠️ **WICHTIG**: Du musst jetzt auf den Button **Grant admin consent for [Deine Organisation]** klicken, damit die Berechtigungen aktiv werden.
+
+> **Hinweis zu `Mail.Send`:** Diese Berechtigung erlaubt der App den Versand als *jedes* Postfach im Tenant. Wer das einschränken will, richtet eine [Application Access Policy](https://learn.microsoft.com/en-us/graph/auth-limit-mailbox-access) ein, die den Zugriff auf das Absenderpostfach (`MAIL_FROM`) beschränkt.
 
 ## 5. Ziel-Kalender (Shared Mailbox / Public Calendar)
 
@@ -60,4 +63,7 @@ MS_TENANT_ID=00000000-0000-0000-0000-000000000000
 MS_CLIENT_ID=11111111-1111-1111-1111-111111111111
 MS_CLIENT_SECRET=DeinGeheimesSecretValue...
 MS_CALENDAR_EMAIL=notfall-kalender@deine-firma.de
+
+# Nur nötig, wenn die Benachrichtigungen über Graph laufen (kein SMTP_HOST gesetzt):
+MAIL_FROM=notfall-kalender@deine-firma.de
 ```
