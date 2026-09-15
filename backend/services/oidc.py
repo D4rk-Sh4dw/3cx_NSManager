@@ -13,6 +13,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import requests
 from jose import jwt, JWTError
+from jose.exceptions import JOSEError
 
 ISSUER = os.getenv("OIDC_ISSUER", "").rstrip("/")
 CLIENT_ID = os.getenv("OIDC_CLIENT_ID", "")
@@ -153,6 +154,14 @@ def exchange_code(code: str, code_verifier: str) -> Dict[str, Any]:
 
 def validate_id_token(id_token: str, expected_nonce: str) -> Dict[str, Any]:
     """Verify signature, issuer, audience, expiry and nonce. Returns the claims."""
+    if id_token.count(".") == 4:
+        # 5 segments = JWE (encrypted token), not a signed JWT we can verify here.
+        raise OIDCError(
+            "ID token is encrypted (JWE), but only signed tokens (JWS) are supported. "
+            "Disable ID token encryption on the OIDC provider (e.g. in Authentik: remove "
+            "the 'Encryption Key' / certificate from the provider's advanced settings)."
+        )
+
     try:
         header = jwt.get_unverified_header(id_token)
     except JWTError as e:
@@ -172,11 +181,13 @@ def validate_id_token(id_token: str, expected_nonce: str) -> Dict[str, Any]:
             issuer=ISSUER,
             options={"verify_at_hash": False},
         )
-    except JWTError as e:
+    except JOSEError as e:
+        actual_iss = jwt.get_unverified_claims(id_token).get("iss")
         raise OIDCError(
             f"ID token validation failed: {e} "
             f"(header kid={header.get('kid')!r} alg={header.get('alg')!r}, "
-            f"matched key kid={key.get('kid')!r} kty={key.get('kty')!r})"
+            f"matched key kid={key.get('kid')!r} kty={key.get('kty')!r}, "
+            f"expected issuer={ISSUER!r} token issuer={actual_iss!r})"
         )
 
     if claims.get("nonce") != expected_nonce:
