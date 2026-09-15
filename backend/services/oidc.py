@@ -173,7 +173,11 @@ def validate_id_token(id_token: str, expected_nonce: str) -> Dict[str, Any]:
             options={"verify_at_hash": False},
         )
     except JWTError as e:
-        raise OIDCError(f"ID token validation failed: {e}")
+        raise OIDCError(
+            f"ID token validation failed: {e} "
+            f"(header kid={header.get('kid')!r} alg={header.get('alg')!r}, "
+            f"matched key kid={key.get('kid')!r} kty={key.get('kty')!r})"
+        )
 
     if claims.get("nonce") != expected_nonce:
         raise OIDCError("Nonce mismatch - possible replay, login rejected")
