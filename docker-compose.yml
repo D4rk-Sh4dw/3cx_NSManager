@@ -29,6 +29,26 @@ services:
       MS_CLIENT_ID: ${MS_CLIENT_ID}
       MS_CLIENT_SECRET: ${MS_CLIENT_SECRET}
       MS_CALENDAR_EMAIL: ${MS_CALENDAR_EMAIL}
+      # Mail Notifications (SMTP takes precedence, otherwise MS Graph sendMail is used)
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      SMTP_SSL: ${SMTP_SSL:-false}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Notfallservice Manager}
+      APP_BASE_URL: ${APP_BASE_URL}
+      # SSO / OpenID Connect (e.g. Authentik). Empty issuer = SSO disabled.
+      OIDC_ISSUER: ${OIDC_ISSUER}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
+      OIDC_REDIRECT_URL: ${OIDC_REDIRECT_URL}
+      OIDC_SCOPES: ${OIDC_SCOPES:-openid profile email}
+      OIDC_PROVIDER_NAME: ${OIDC_PROVIDER_NAME:-Authentik}
+      OIDC_DEFAULT_ROLE: ${OIDC_DEFAULT_ROLE:-planner}
+      OIDC_COOKIE_SECURE: ${OIDC_COOKIE_SECURE:-true}
+      LOCAL_LOGIN_ENABLED: ${LOCAL_LOGIN_ENABLED:-true}
     depends_on:
       - db
     networks:
@@ -52,6 +72,24 @@ services:
       CX_DUMMY_EXT: ${CX_DUMMY_EXT}
       CENTRAL_NUMBER: ${CENTRAL_NUMBER}
       # Scheduler needs to reach backend? No, it talks to DB + 3CX directly.
+      # Mail Notifications (weekly reminder)
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      SMTP_SSL: ${SMTP_SSL:-false}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Notfallservice Manager}
+      APP_BASE_URL: ${APP_BASE_URL}
+      MS_TENANT_ID: ${MS_TENANT_ID}
+      MS_CLIENT_ID: ${MS_CLIENT_ID}
+      MS_CLIENT_SECRET: ${MS_CLIENT_SECRET}
+      MS_CALENDAR_EMAIL: ${MS_CALENDAR_EMAIL}
+      # Weekly reminder: 0=Mon ... 6=Sun
+      REMINDER_ENABLED: ${REMINDER_ENABLED:-true}
+      REMINDER_WEEKDAY: ${REMINDER_WEEKDAY:-3}
+      REMINDER_HOUR: ${REMINDER_HOUR:-9}
     depends_on:
       - db
     networks:

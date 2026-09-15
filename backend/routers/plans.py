@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from typing import List
@@ -7,6 +7,7 @@ from models import NotfallPlan, AuditLog, CalendarEvent, User
 from schemas import Plan as PlanSchema, PlanCreate, PlanUpdate
 from routers.auth import get_current_user
 from services.graph_service import create_event, delete_event
+from services.notifications import get_admin_emails, notify_admins_pending_confirmation
 import json
 
 router = APIRouter(prefix="/plans", tags=["plans"])
@@ -38,6 +39,7 @@ def read_plans(
 @router.post("/", response_model=PlanSchema)
 def create_plan(
     plan: PlanCreate, 
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_planner_or_admin)
 ):
@@ -104,6 +106,21 @@ def create_plan(
     
     db.commit()
     db.refresh(db_plan)
+
+    # Notify admins that this entry still needs confirmation.
+    # The creator does not need a mail about their own entry.
+    if not db_plan.confirmed:
+        recipients = [e for e in get_admin_emails(db) if e != current_user.email]
+        background_tasks.add_task(
+            notify_admins_pending_confirmation,
+            recipients,
+            db_plan.id,
+            f"{assigned_user.first_name} {assigned_user.last_name}",
+            db_plan.start_date,
+            db_plan.end_date,
+            current_user.username,
+        )
+
     return db_plan
 
 @router.put("/{plan_id}", response_model=PlanSchema)

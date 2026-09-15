@@ -3,9 +3,10 @@ import requests
 import os
 import pytz
 from datetime import datetime
-from database import SessionLocal
+from database import SessionLocal, engine, Base
 from models import NotfallPlan, User
 from sqlalchemy import and_
+from reminders import maybe_send_weekly_reminder
 
 # Configuration
 CHECK_INTERVAL = 60 # Check every 60 seconds
@@ -131,12 +132,20 @@ def main():
     
     if not CX_CLIENT_ID or not CX_CLIENT_SECRET:
         print("[WARNING] CX_CLIENT_ID or CX_CLIENT_SECRET not set. 3CX Integration disabled.")
+
+    # The backend owns the schema, but the scheduler may start first.
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"[WARNING] Could not ensure tables exist: {e}")
     
     last_number = None
 
     while True:
+        db = None
         try:
             db = SessionLocal()
+            now = datetime.now(TIMEZONE).replace(tzinfo=None)
             target_number = CENTRAL_NUMBER # Default Fallback
 
             user = get_current_active_user(db)
@@ -157,10 +166,14 @@ def main():
             else:
                 pass # No change
 
-            db.close()
-            
+            # Weekly reminder if nobody signed up for the coming week
+            maybe_send_weekly_reminder(db, now)
+
         except Exception as e:
             print(f"Error in scheduler loop: {e}")
+        finally:
+            if db:
+                db.close()
         
         time.sleep(CHECK_INTERVAL)
 
