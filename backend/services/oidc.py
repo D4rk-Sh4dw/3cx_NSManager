@@ -169,6 +169,9 @@ def validate_id_token(id_token: str, expected_nonce: str) -> Dict[str, Any]:
 
     key = _signing_key(header.get("kid"))
     algorithm = header.get("alg") or key.get("alg") or "RS256"
+    canonical_issuer = _discovery().get("issuer")
+    if not canonical_issuer:
+        raise OIDCError("Discovery document has no issuer")
     if algorithm.lower() == "none":
         raise OIDCError("ID token is unsigned")
 
@@ -178,7 +181,7 @@ def validate_id_token(id_token: str, expected_nonce: str) -> Dict[str, Any]:
             key,
             algorithms=[algorithm],
             audience=CLIENT_ID,
-            issuer=ISSUER,
+            issuer=canonical_issuer,
             options={"verify_at_hash": False},
         )
     except JOSEError as e:
@@ -187,7 +190,7 @@ def validate_id_token(id_token: str, expected_nonce: str) -> Dict[str, Any]:
             f"ID token validation failed: {e} "
             f"(header kid={header.get('kid')!r} alg={header.get('alg')!r}, "
             f"matched key kid={key.get('kid')!r} kty={key.get('kty')!r}, "
-            f"expected issuer={ISSUER!r} token issuer={actual_iss!r})"
+            f"expected issuer={canonical_issuer!r} token issuer={actual_iss!r})"
         )
 
     if claims.get("nonce") != expected_nonce:
