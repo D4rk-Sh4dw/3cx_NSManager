@@ -41,6 +41,7 @@ services:
       SMTP_SSL: ${SMTP_SSL:-false}
       MAIL_FROM: ${MAIL_FROM}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Notfallservice Manager}
+      MAIL_LOGO_URL: ${MAIL_LOGO_URL:-}
       APP_BASE_URL: ${APP_BASE_URL}
       # SSO / OpenID Connect (e.g. Authentik). Empty issuer = SSO disabled.
       OIDC_ISSUER: ${OIDC_ISSUER}
@@ -85,6 +86,7 @@ services:
       SMTP_SSL: ${SMTP_SSL:-false}
       MAIL_FROM: ${MAIL_FROM}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Notfallservice Manager}
+      MAIL_LOGO_URL: ${MAIL_LOGO_URL:-}
       APP_BASE_URL: ${APP_BASE_URL}
       MS_TENANT_ID: ${MS_TENANT_ID}
       MS_CLIENT_ID: ${MS_CLIENT_ID}

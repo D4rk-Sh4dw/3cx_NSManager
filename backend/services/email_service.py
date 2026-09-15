@@ -9,6 +9,7 @@ import os
 import smtplib
 import requests
 from email.message import EmailMessage
+from html import escape
 from typing import List, Optional
 from azure.identity import ClientSecretCredential
 
@@ -28,6 +29,7 @@ CLIENT_SECRET = os.getenv("MS_CLIENT_SECRET")
 # Sender: explicit MAIL_FROM, otherwise the shared calendar mailbox
 MAIL_FROM = os.getenv("MAIL_FROM") or os.getenv("MS_CALENDAR_EMAIL")
 MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "Notfallservice Manager")
+MAIL_LOGO_URL = os.getenv("MAIL_LOGO_URL", "").strip()
 
 # Base URL used for links inside the mails
 APP_BASE_URL = os.getenv("APP_BASE_URL", "").rstrip("/")
@@ -139,6 +141,13 @@ def transport_name() -> str:
 def html_wrapper(title: str, paragraphs: List[str], link_path: str = "") -> str:
     """Small shared HTML skeleton so all notification mails look the same."""
     body = "".join(f"<p style='margin:0 0 12px 0;'>{p}</p>" for p in paragraphs)
+    logo = ""
+    if MAIL_LOGO_URL:
+        logo = (
+            f"<img src='{escape(MAIL_LOGO_URL, quote=True)}' alt='{escape(MAIL_FROM_NAME, quote=True)}' "
+            "style='display:block;max-width:200px;max-height:72px;width:auto;height:auto;"
+            "margin:0 0 20px 0;'/>"
+        )
     button = ""
     if APP_BASE_URL:
         url = f"{APP_BASE_URL}{link_path}"
@@ -150,7 +159,7 @@ def html_wrapper(title: str, paragraphs: List[str], link_path: str = "") -> str:
     return (
         "<div style=\"font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;"
         "line-height:1.5;\">"
-        f"<h2 style='margin:0 0 16px 0;font-size:18px;'>{title}</h2>"
+        f"{logo}<h2 style='margin:0 0 16px 0;font-size:18px;'>{title}</h2>"
         f"{body}{button}"
         "<p style='margin:24px 0 0 0;color:#6b7280;font-size:12px;'>"
         "Diese Nachricht wurde automatisch vom Notfallservice Manager versendet.</p>"
