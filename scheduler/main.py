@@ -36,8 +36,7 @@ def get_3cx_token():
     payload = {
         "grant_type": "client_credentials",
         "client_id": CX_CLIENT_ID,
-        "client_secret": CX_CLIENT_SECRET,
-        "scope": "offline_access" # Basic scope
+        "client_secret": CX_CLIENT_SECRET
     }
     
     try:
