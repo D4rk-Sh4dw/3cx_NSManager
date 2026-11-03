@@ -81,35 +81,54 @@ def get_dummy_user_id(token):
         print(f"[3CX] User lookup failed: {e}")
         return None
 
-def update_3cx_mobile(number: str):
-    """Updates the Dummy User's Mobile Number via XAPI"""
+def _find_mobile_field(token, user_id):
+    """Reads the user and returns the name of the mobile field (API versions differ)."""
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+    try:
+        resp = requests.get(f"{CX_TENANT_URL}/xapi/v1/Users({user_id})", headers=headers, timeout=10)
+        resp.raise_for_status()
+        user = resp.json()
+        for name in ("Mobile", "MobileNumber", "MobilePhone"):
+            if name in user:
+                return name
+        print(f"[3CX] No known mobile field found. User fields: {sorted(user.keys())}")
+    except Exception as e:
+        print(f"[3CX] Could not read user for field detection: {e}")
+    return "Mobile"
+
+def update_3cx_mobile(number: str) -> bool:
+    """Updates the Dummy User's Mobile Number via XAPI. Returns True on success."""
+    global _cx_user_id, _last_token
     token = get_3cx_token()
-    if not token: return
+    if not token: return False
 
     user_id = get_dummy_user_id(token)
-    if not user_id: return
+    if not user_id: return False
 
-    print(f"[3CX] Updating User {CX_DUMMY_EXT} Mobile Number to: {number}")
+    field = _find_mobile_field(token, user_id)
+    print(f"[3CX] Updating User {CX_DUMMY_EXT} {field} to: {number}")
     headers = {
-        "Authorization": f"Bearer {token}", 
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
         "Accept": "application/json"
     }
     url = f"{CX_TENANT_URL}/xapi/v1/Users({user_id})"
-    
-    # Payload structure for XAPI PATCH
-    payload = {
-        "Mobile": number
-    }
 
+    resp = None
     try:
-        resp = requests.patch(url, json=payload, headers=headers, timeout=10)
+        resp = requests.patch(url, json={field: number}, headers=headers, timeout=10)
         resp.raise_for_status()
         print("[3CX] Successfully updated mobile number.")
+        return True
     except Exception as e:
         print(f"[3CX] Update failed: {e}")
-        if resp.text:
+        if resp is not None:
             print(f"[3CX] Response: {resp.text}")
+            if resp.status_code in (401, 404):
+                # Stale token / cached user id: re-resolve on next attempt
+                _last_token = None
+                _cx_user_id = None
+        return False
 
 def get_current_active_user(db):
     """Finds the user currently scheduled and confirmed."""
@@ -161,8 +180,11 @@ def main():
             # Only update if number changed to reduce API calls
             if target_number != last_number:
                 if CX_CLIENT_ID:
-                    update_3cx_mobile(target_number)
-                last_number = target_number
+                    # Only remember the number if 3CX accepted it, otherwise retry next cycle
+                    if update_3cx_mobile(target_number):
+                        last_number = target_number
+                else:
+                    last_number = target_number
             else:
                 pass # No change
 
