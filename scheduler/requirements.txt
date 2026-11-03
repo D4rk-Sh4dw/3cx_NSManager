@@ -1,6 +1,7 @@
 apscheduler
 sqlalchemy
 psycopg2-binary
+psycopg[binary]
 requests
 msgraph-core
 azure-identity
