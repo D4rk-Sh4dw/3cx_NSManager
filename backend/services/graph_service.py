@@ -48,6 +48,7 @@ def create_event(subject: str, start: datetime, end: datetime, attendee_email: s
             "timeZone": "Europe/Berlin"
         },
         "isOnlineMeeting": False,
+        "showAs": "free",
     }
 
     if attendee_email:
